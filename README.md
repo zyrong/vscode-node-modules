@@ -1,6 +1,6 @@
 # node-modules
-![](http://vsmarketplacebadge.apphb.com/version/zyrong.node-modules.svg)
-![](http://vsmarketplacebadge.apphb.com/installs/zyrong.node-modules.svg)
+![](https://vsmarketplacebadge.apphb.com/version/zyrong.node-modules.svg)
+![](https://vsmarketplacebadge.apphb.com/installs/zyrong.node-modules.svg)
 
 快速前往node_modules下对应package的目录
 
