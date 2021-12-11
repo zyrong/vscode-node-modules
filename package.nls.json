@@ -1,0 +1,6 @@
+{
+  "cmd.SearchPackage": "Search Package",
+  "tip.workspaceNoOpenProject": "The current workspace does not have an open project",
+  "tip.selectSearchProject":"Please select the node_modules project to search",
+  "tip.notFoundPackage":"The corresponding package cannot be found. It may not be installed yet?"
+}
