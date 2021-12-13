@@ -14,7 +14,7 @@
   "engines": {
     "vscode": "^1.21.0"
   },
-  "icon": "images/logo.png",
+  "icon": "logo.png",
   "galleryBanner": {
     "color": "#2f54eb"
   },
