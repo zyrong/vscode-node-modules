@@ -1,5 +1,6 @@
 {
   "cmd.SearchPackage": "搜索 Package",
+  "cmd.Searchnm":"搜索 node_modules",
   "tip.workspaceNoOpenProject":"当前工作区没有打开项目",
   "tip.selectSearchProject":"请选择要搜索node_modules的项目",
   "tip.notFoundPackage":"找不到对应的package，可能还未安装？"

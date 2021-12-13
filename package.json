@@ -23,7 +23,8 @@
   ],
   "activationEvents": [
     "onLanguage:json",
-    "onCommand:extension.search.package"
+    "onCommand:extension.search.package",
+    "onCommand:extension.search.node_modules"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -31,6 +32,10 @@
       {
         "command": "extension.search.package",
         "title": "%cmd.SearchPackage%"
+      },
+      {
+        "command": "extension.search.node_modules",
+        "title": "%cmd.Searchnm%"
       }
     ],
     "menus": {
@@ -38,7 +43,12 @@
         {
           "when": "resourceFilename == node_modules",
           "command": "extension.search.package",
-          "group": "4_search"
+          "group": "4_search@1"
+        },
+        {
+          "when": "resourceFilename == node_modules",
+          "command": "extension.search.node_modules",
+          "group": "4_search@2"
         }
       ]
     },
@@ -47,6 +57,11 @@
         "command": "extension.search.package",
         "mac": "cmd+k p",
         "key": "ctrl+k p"
+      },
+      {
+        "command": "extension.search.node_modules",
+        "mac": "cmd+k n",
+        "key": "ctrl+k n"
       }
     ]
   },

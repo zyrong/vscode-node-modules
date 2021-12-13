@@ -1,6 +1,23 @@
-import {workspace,Location,Uri,Position} from "vscode";
-import { existsSync, readFileSync } from "fs";
+import { workspace, Location, Uri, Position, window } from "vscode";
+import { existsSync, readFileSync, statSync } from "fs";
 import { join } from "path";
+
+export function isFile(path: string): Boolean {
+  try {
+    const _stat = statSync(path);
+    return _stat.isFile();
+  } catch (error) {
+    return false;
+  }
+}
+
+export function existFile(path: string): Boolean {
+  try {
+    return existsSync(path);
+  } catch (error) {
+    return false;
+  }
+}
 
 // 获取文件所在工作空间的根目录
 export const getFileInProjectRootDir = function (
@@ -38,19 +55,20 @@ export const genFileLocation = (
   character: number = 0
 ) => {
   // new vscode.Position(0, 0) 表示跳转到某个文件的第一行第一列
-  return new Location(
-    Uri.file(destPath),
-    new Position(line, character)
-  );
+  return new Location(Uri.file(destPath), new Position(line, character));
 };
 
-export function error(msg: string, err?: any) {
-  console.error(`[node_modules extension]: ${msg}. \n${err}`);
-}
+export const error = (function () {
+  const output = window.createOutputChannel("node_modules");
+  return function (msg: string, err?: any) {
+    output.appendLine(`[Error]: ${msg}. \n${err}\n`);
+    // console.error(`[node_modules extension]: ${msg}. \n${err}`);
+  };
+})();
 
 export function promiseAny<T>(promiseList: Promise<T>[]): Promise<T[]> {
   return new Promise((resolve, reject) => {
-    if(!(Array.isArray(promiseList) && promiseList.length >0)){
+    if (!(Array.isArray(promiseList) && promiseList.length > 0)) {
       resolve([]);
       return;
     }
