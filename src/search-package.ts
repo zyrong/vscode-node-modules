@@ -1,7 +1,7 @@
 import { window, workspace, Uri } from "vscode";
 import { stat, readdir, access } from "fs/promises";
 import { basename, join } from "path";
-import { promiseAny, getFileInProjectRootDir, error } from "./utils";
+import { getFileInProjectRootDir, error } from "./utils";
 import t from "./utils/localize";
 import { NODE_MODULES, PACKAGE_JSON } from "./types";
 
@@ -55,7 +55,7 @@ function searchNodeModules(node_modulesPath: string) {
         }
       });
 
-      const resultList = await promiseAny(
+      const resultList = await Promise.all(
         organizePkgList.map((filename) => {
           return readdir(join(node_modulesPath, filename));
         })
@@ -114,8 +114,10 @@ function searchNodeModules(node_modulesPath: string) {
         } else {
           destPath = pkgJsonPath;
         }
-        destPath &&
+
+        if(destPath) {
           workspace.openTextDocument(destPath).then(window.showTextDocument);
+        }
       }
     },
     (err) => {
