@@ -84,10 +84,10 @@ export default async function showQuickPickFile(
 
       disposables.push(
         input.onDidChangeValue(handleInputItems),
-        input.onDidChangeSelection((items) => {
+        input.onDidChangeSelection(async (items) => {
           const item = items[0];
           if (item instanceof FileItem) {
-            if (isFile(item.fsPath)) {
+            if (await isFile(item.fsPath)) {
               resolve(item.fsPath);
               input.hide();
             } else {
