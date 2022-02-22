@@ -9,7 +9,14 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "@typescript-eslint/naming-convention": "warn",
+        "@typescript-eslint/naming-convention": ["warn",  {
+            "selector": "variable",
+            "format": ["camelCase"],
+            "filter": {
+                "regex": "(^_)|node_modules|publisher_name",
+                "match": false
+            }
+          }],
         "@typescript-eslint/semi": "warn",
         "curly": "warn",
         "eqeqeq": "warn",
