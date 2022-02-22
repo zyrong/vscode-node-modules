@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.2](https://github.com/zyrong/vscode-node-modules/compare/v1.1.1...v1.1.2) (2022-02-22)
+
+
+### Bug Fixes
+
+* fix mouse hover pkgname bug ([3d15cbb](https://github.com/zyrong/vscode-node-modules/commit/3d15cbb9801e812d68b8fbf41c1ef6b00365daf8)), closes [#1](https://github.com/zyrong/vscode-node-modules/issues/1)
+
 ### [1.1.1](https://github.com/zyrong/vscode-node-modules/compare/v1.1.0...v1.1.1) (2021-12-14)
 
 

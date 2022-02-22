@@ -29,6 +29,34 @@ export const getFileInProjectRootDir = function (
   return project?.uri.path;
 };
 
+type DepsOffsetRange = {
+  peerDependencies?: number[]
+  dependencies?: number[]
+  devDependencies?: number[]
+};
+// 获取deps字符范围
+export const getDepsOffsetRange = function (
+  packageJson: string
+): DepsOffsetRange {
+  // match deps range string
+  // /(?<="(?:peerDependencies|dependencies|devDependencies)"[^\{]*?\{)[^\}]*([\s\S]*?)[^\}]*/g
+  const regex = /"(peerDependencies|dependencies|devDependencies)"[^\{]*?\{/g;
+  const result: DepsOffsetRange = {};
+  for (let i = 0; i < 3; i++) {
+    const match = regex.exec(packageJson);
+    if (!match) {
+      continue;
+    }
+
+    const startIdx = match.index + match[0].length;
+    const endIdx = packageJson.indexOf("}", startIdx);
+    const key = match[1];
+    result[(key as keyof DepsOffsetRange)] = [startIdx, endIdx];
+    regex.lastIndex = endIdx;
+  }
+  return result;
+};
+
 // 判断是否是monorepo项目
 export const isMonorepoProject = (projectRootDir: string) => {
   // TODO: 暂时先这么判断
