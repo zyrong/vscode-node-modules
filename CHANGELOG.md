@@ -2,14 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [1.1.5](https://github.com/zyrong/vscode-node-modules/compare/v1.1.4...v1.1.5) (2022-02-23)
-
-### [1.1.4](https://github.com/zyrong/vscode-node-modules/compare/v1.1.3...v1.1.4) (2022-02-23)
-
-
-### Bug Fixes
-
-* fix vscode version dependency to 1.43.1 ([626456d](https://github.com/zyrong/vscode-node-modules/commit/626456d54da74554ec6256134afbb874c655cdec))
+### [1.1.4](https://github.com/zyrong/vscode-node-modules/compare/v1.1.5...v1.1.4) (2022-02-23)
 
 ### [1.1.3](https://github.com/zyrong/vscode-node-modules/compare/v1.1.2...v1.1.3) (2022-02-23)
 
