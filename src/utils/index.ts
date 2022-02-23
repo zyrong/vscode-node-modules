@@ -94,7 +94,8 @@ export const error = (function () {
   };
 })();
 
-export function promiseAny<T>(promiseList: Promise<T>[]): Promise<T[]> {
+// 遇到错误也不会stop的Promise.all，该方法会将错误存入对应的索引中
+export function promiseAll<T>(promiseList: Promise<T>[]): Promise<T[]> {
   return new Promise((resolve, reject) => {
     if (!(Array.isArray(promiseList) && promiseList.length > 0)) {
       resolve([]);
