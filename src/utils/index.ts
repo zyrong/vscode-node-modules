@@ -93,31 +93,3 @@ export const error = (function () {
     // console.error(`[node_modules extension]: ${msg}. \n${err}`);
   };
 })();
-
-// 遇到错误也不会stop的Promise.all，该方法会将错误存入对应的索引中
-export function promiseAll<T>(promiseList: Promise<T>[]): Promise<T[]> {
-  return new Promise((resolve, reject) => {
-    if (!(Array.isArray(promiseList) && promiseList.length > 0)) {
-      resolve([]);
-      return;
-    }
-    let count = 0;
-    const result: T[] = new Array(promiseList.length);
-    promiseList.forEach((promise, index) => {
-      promise
-        .then(
-          (res) => {
-            result[index] = res;
-          },
-          (err) => {
-            result[index] = err;
-          }
-        )
-        .finally(() => {
-          if (++count === promiseList.length) {
-            resolve(result);
-          }
-        });
-    });
-  });
-}

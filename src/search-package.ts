@@ -1,7 +1,7 @@
 import { window, workspace, Uri } from "vscode";
 import { stat, readdir, access } from "fs/promises";
 import { basename, join } from "path";
-import { promiseAll, getFileInProjectRootDir, error } from "./utils";
+import { getFileInProjectRootDir, error } from "./utils";
 import t from "./utils/localize";
 import { NODE_MODULES, PACKAGE_JSON } from "./types";
 
@@ -55,18 +55,18 @@ function searchNodeModules(node_modulesPath: string) {
         }
       });
 
-      const resultList = await promiseAll(
+      const resultList = await Promise.allSettled(
         organizePkgList.map((filename) => {
           return readdir(join(node_modulesPath, filename));
         })
       );
 
       let fullOrganizePkgList: string[] = [];
-      resultList.forEach((_files, idx) => {
+      resultList.forEach((result, idx) => {
+        if(result.status === 'rejected') {return;};
+        const _files = result.value;
         if (Array.isArray(_files)) {
           const organizeName = organizePkgList[idx];
-          // 对readdir可能存在错误进行过滤
-          if(typeof organizeName !== 'string') {return;};
           const fullOrganizePkgNameList = _files.map((filename) => {
             return `${organizeName}/${filename}`;
           });
