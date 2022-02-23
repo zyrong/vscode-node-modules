@@ -1,19 +1,19 @@
-import { existsSync } from "fs";
-import * as fsAsync from 'fs/promises';
+import { constants } from "fs";
+import { access, stat } from "fs/promises";
 import { window } from "vscode";
 
 export async function isFile(path: string): Promise<boolean> {
   try {
-    const stat = await fsAsync.stat(path);
-    return stat.isFile();
+    return (await stat(path)).isFile();
   } catch (error) {
     return false;
   }
 }
 
-export function existFile(path: string): boolean  {
+export async function existFile(path: string): Promise<boolean> {
   try {
-    return existsSync(path);
+    await access(path, constants.F_OK);
+    return true;
   } catch (error) {
     return false;
   }
