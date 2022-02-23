@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.3](https://github.com/zyrong/vscode-node-modules/compare/v1.1.2...v1.1.3) (2022-02-23)
+
+
+### Bug Fixes
+
+* change functionName promiseAny to promiseAll , Handle errors in readdir methods ([aad9ce3](https://github.com/zyrong/vscode-node-modules/commit/aad9ce35fe0f212fb3ffe90f60ce448b1645eafd))
+
 ### [1.1.2](https://github.com/zyrong/vscode-node-modules/compare/v1.1.1...v1.1.2) (2022-02-22)
 
 
