@@ -1,12 +1,11 @@
 README.md Language: [中文](https://github.com/zyrong/vscode-node-modules/blob/master/README.md) | [English](https://github.com/zyrong/vscode-node-modules/blob/master/README.en.md)
 <br/><br/>
 
-# node-modules
-![](https://vsmarketplacebadge.apphb.com/version/zyrong.node-modules.svg)
-![](https://vsmarketplacebadge.apphb.com/installs/zyrong.node-modules.svg)
+# node-modules ![](https://vsmarketplacebadge.apphb.com/version/zyrong.node-modules.svg) ![](https://vsmarketplacebadge.apphb.com/installs/zyrong.node-modules.svg)
 
-快速前往node_modules下对应package的目录
+> 快速前往node_modules下对应package的目录
 
+<br/>
 
 ## Features
 

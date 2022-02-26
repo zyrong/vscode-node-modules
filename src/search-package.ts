@@ -55,14 +55,16 @@ function searchNodeModules(node_modulesPath: string) {
         }
       });
 
-      const resultList = await Promise.all(
+      const resultList = await Promise.allSettled(
         organizePkgList.map((filename) => {
           return readdir(join(node_modulesPath, filename));
         })
       );
 
       let fullOrganizePkgList: string[] = [];
-      resultList.forEach((_files, idx) => {
+      resultList.forEach((result, idx) => {
+        if(result.status === 'rejected') {return;};
+        const _files = result.value;
         if (Array.isArray(_files)) {
           const organizeName = organizePkgList[idx];
           const fullOrganizePkgNameList = _files.map((filename) => {
