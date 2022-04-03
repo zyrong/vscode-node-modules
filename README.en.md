@@ -9,7 +9,7 @@ README.md Language: [中文](https://github.com/zyrong/vscode-node-modules/blob/
 
 ## Features
 
-- Click packageName in the package.json file to jump to the corresponding package directory of the node_modules.   
+- In package.json file, `press Ctrl` and `click packagename` to jump to node_ modules corresponds to the package directory.   
 ![](https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif)
 
 - Right-click the node_modules folder and click the search Package in the pop-up menu to search the node_modules package.   

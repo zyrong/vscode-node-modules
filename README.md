@@ -9,7 +9,7 @@ README.md Language: [中文](https://github.com/zyrong/vscode-node-modules/blob/
 
 ## Features
 
-- package.json文件中 点击packageName将跳转到node_modules对应package目录下.   
+- 在package.json文件中 `按住ctrl`+`点击packageName`将跳转到node_modules对应package目录下.   
 ![](https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif)
 
 - 对 node_modules文件夹 点击右键，在弹出的菜单，点击搜索 Package，可以对node_modules的package进行搜索。   
