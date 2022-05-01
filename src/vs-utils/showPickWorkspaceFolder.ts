@@ -3,7 +3,9 @@ import t from "./i18n";
 
 export default async function showPickWorkspaceFolder(): Promise<string> {
   const workspaceFolders = workspace.workspaceFolders;
-  if (!workspaceFolders) {return "";}
+  if (!(workspaceFolders && workspaceFolders.length)) {
+    throw new Error('The current workspace does not have an open project');
+  }
   if (workspaceFolders.length === 1) {
     return workspaceFolders[0].uri.fsPath;
   } else {

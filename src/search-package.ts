@@ -4,38 +4,27 @@ import { basename, join } from "path";
 import { getFileInProjectRootDir, error } from "./utils";
 import t from "./utils/localize";
 import { NODE_MODULES, PACKAGE_JSON } from "./types";
+import showPickWorkspaceFolder from "./vs-utils/showPickWorkspaceFolder";
+import validate = require('validate-npm-package-name');
 
 export default async function (uri: Uri) {
   // package.json中menus已经限定目录名为node_modules才触发该命令，所以uri.path存在必定是node_modulesPath
   let node_modulesPath = uri ? uri.path : "";
 
   if (!node_modulesPath) {
-    const workspaceFolders = workspace.workspaceFolders;
-
-    if (!workspaceFolders?.length) {
+    let projectRootPath;
+    try {
+      projectRootPath = await showPickWorkspaceFolder();
+      if (!projectRootPath) {
+        window.showErrorMessage(t('tip.selectSearchProject'));
+        return;
+      }
+    } catch (error: any) {
+      projectRootPath = '';
       window.showErrorMessage(t('tip.workspaceNoOpenProject'));
       return;
     }
-
-    if (workspaceFolders.length === 1) {
-      node_modulesPath = join(workspaceFolders[0].uri.path, NODE_MODULES);
-    } else {
-      const pickResult = await window.showQuickPick(
-        workspaceFolders!.map((item) => {
-          return {
-            label: item.name,
-            projectRootPath: item.uri.path,
-          };
-        }),
-        {
-          placeHolder: t("tip.selectSearchProject"),
-        }
-      );
-
-      if (pickResult) {
-        node_modulesPath = join(pickResult.projectRootPath, NODE_MODULES);
-      }
-    }
+    node_modulesPath = join(projectRootPath, NODE_MODULES);
   }
 
   if (node_modulesPath) {
@@ -52,7 +41,7 @@ async function getNodeModulesPkgNameList(node_modulesPath: string) {
     files.forEach((filename) => {
       if (filename.startsWith("@")) {
         organizePkgList.push(filename);
-      } else {
+      } else if (validate(filename).validForOldPackages) {
         pkgList.push(filename);
       }
     });
@@ -118,10 +107,10 @@ async function searchNodeModules(node_modulesPath: string) {
       await access(userPickPath);
     } catch (err) {
       try {
-        userPickPath = join(pnpmOtherPkgNode_modules,pickResult);
+        userPickPath = join(pnpmOtherPkgNode_modules, pickResult);
         await access(userPickPath);
       } catch (err) {
-        error(`路径不存在:${userPickPath}`,err);
+        error(`路径不存在:${userPickPath}`, err);
       }
     }
 
