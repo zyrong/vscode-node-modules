@@ -18,6 +18,9 @@ README.md Language: [中文](https://github.com/zyrong/vscode-node-modules/blob/
 - 在弹出的菜单中，点击搜索 node_modules，可以对node_modules进行路径搜索。   
 ![](https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif)
 
+- 在`.ts` `.js` `.jsx` `.tsx` `.vue`文件中导入package，鼠标移动到`PackageName`上，将会得到相关提示。   
+![](https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif)
+
 > 快捷键:  
 > 搜索 Package: windows(ctrl+k p)、mac(cmd+k p)  
 > 搜索 node_modules: windows(ctrl+k n)、mac(cmd+k n)

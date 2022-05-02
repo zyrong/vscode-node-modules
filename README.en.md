@@ -18,6 +18,9 @@ README.md Language: [中文](https://github.com/zyrong/vscode-node-modules/blob/
 - In the pop-up menu, click the search node_modules to search the node_modules path.   
 ![](https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif)
 
+- Import the package in `.ts` `.jsx` `.tsx` `.vue` file, move the mouse over the `PackageName`, You will get relevant tips.   
+![](https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif)
+
 > Shortcut keys:  
 > Search Package: windows(ctrl+k p)、mac(cmd+k p)  
 > Search node_modules: windows(ctrl+k n)、mac(cmd+k n)
