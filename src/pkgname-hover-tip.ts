@@ -17,7 +17,7 @@ import {
 } from "vscode";
 import { parse } from '@babel/parser';
 import traverse from "@babel/traverse";
-import { isIdentifier, isStringLiteral, isImportDeclaration } from '@babel/types';
+import { isIdentifier, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
 import { error, getFileInProjectRootDir, getPkgPath } from "./utils";
 import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
@@ -72,7 +72,6 @@ class HoverTip implements HoverProvider {
     const text = document.getText();
     let upperPartText = text.slice(0, nextLineoffset);
     let offset = document.offsetAt(position);
-    console.log(document.languageId);
 
     if (document.languageId === 'vue') {
       const idx = upperPartText.indexOf('<script');
@@ -130,10 +129,18 @@ class HoverTip implements HoverProvider {
         if (isStringLiteral(source) && inRange(source, offset)) {
           isImport = true;
         }
+      },
+      TSImportEqualsDeclaration(path) {
+        if (isImport) { return; };
+        if (isTSExternalModuleReference(path.node.moduleReference) && inRange(path.node.moduleReference.expression, offset)) {
+          isImport = true;
+        }
       }
     });
 
     if (!isImport) { return; };
+
+    // TODO: node内置模块，跳转
 
     const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/);
     if (!pkgNameMatch) { error('pkgname match error'); return; }
