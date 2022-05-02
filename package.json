@@ -10,7 +10,7 @@
     "goto",
     "jump"
   ],
-  "version": "1.1.4",
+  "version": "1.2.0",
   "engines": {
     "vscode": "^1.43.1"
   },
@@ -70,77 +70,77 @@
         "id": "node_modules start",
         "title": "%walkthrough.start.title%",
         "featuredFor": [
-            "node_modules",
-            "package.json"
+          "node_modules",
+          "package.json"
         ],
         "description": "%walkthrough.start.description%",
         "steps": [
-            {
-                "id": "openFolder",
-                "title": "%walkthrough.start.openFolder.title%",
-                "completionEvents": [
-                    "onCommand:workbench.action.files.openFolder"
-                ],
-                "when": "workspaceFolderCount == 0",
-                "description": "%walkthrough.start.openFolder.description%",
-                "media": {
-                    "markdown": "resources/walkthroughs/empty.md"
-                }
-            },
-            {
-              "id": "pkgjson-dep-jump-nm",
-              "title": "%walkthrough.start.pkgjson_dep_definition.title%",
-              "completionEvents": [
-                "onStepSelected"
-              ],
-              "when": "workspaceFolderCount > 0",
-              "description": "%walkthrough.start.pkgjson_dep_definition.description%",
-              "media": {
-                  "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif",
-                  "altText": ""
-              }
-            },
-            {
-              "id": "search Package",
-              "title": "%walkthrough.start.searchPackage.title%",
-              "completionEvents": [
-                "onCommand:extension.search.package"
-              ],
-              "when": "workspaceFolderCount > 0",
-              "description": "%walkthrough.start.searchPackage.description%",
-              "media": {
-                  "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/2.gif",
-                  "altText": ""
-              }
-            },
-            {
-              "id": "search node_modules",
-              "title": "%walkthrough.start.searchNode_modules.title%",
-              "completionEvents": [
-                "onCommand:extension.search.node_modules"
-              ],
-              "when": "workspaceFolderCount > 0",
-              "description": "%walkthrough.start.searchNode_modules.description%",
-              "media": {
-                  "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif",
-                  "altText": ""
-              }
-            },
-            {
-              "id": "hover packageName",
-              "title": "%walkthrough.start.hoverPackageName.title%",
-              "completionEvents": [
-                "onStepSelected"
-              ],
-              "when": "workspaceFolderCount > 0",
-              "description": "%walkthrough.start.hoverPackageName.description%",
-              "media": {
-                  "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif",
-                  "altText": ""
-              }
+          {
+            "id": "openFolder",
+            "title": "%walkthrough.start.openFolder.title%",
+            "completionEvents": [
+              "onCommand:workbench.action.files.openFolder"
+            ],
+            "when": "workspaceFolderCount == 0",
+            "description": "%walkthrough.start.openFolder.description%",
+            "media": {
+              "markdown": "resources/walkthroughs/empty.md"
             }
+          },
+          {
+            "id": "pkgjson-dep-jump-nm",
+            "title": "%walkthrough.start.pkgjson_dep_definition.title%",
+            "completionEvents": [
+              "onStepSelected"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.pkgjson_dep_definition.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "search Package",
+            "title": "%walkthrough.start.searchPackage.title%",
+            "completionEvents": [
+              "onCommand:extension.search.package"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.searchPackage.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/2.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "search node_modules",
+            "title": "%walkthrough.start.searchNode_modules.title%",
+            "completionEvents": [
+              "onCommand:extension.search.node_modules"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.searchNode_modules.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "hover packageName",
+            "title": "%walkthrough.start.hoverPackageName.title%",
+            "completionEvents": [
+              "onStepSelected"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.hoverPackageName.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif",
+              "altText": ""
+            }
+          }
         ]
-    }
+      }
     ]
   },
   "scripts": {
