@@ -5,6 +5,10 @@ export function activate(context: ExtensionContext) {
       packageJsonJumpToNodeModules(context);
   });
 
+  import('./pkgname-hover-tip').then(({ default: pkgnameHoverTip }) => {
+    pkgnameHoverTip(context);
+});
+
 
   context.subscriptions.push(
     commands.registerCommand("extension.search.package", async (uri) => {

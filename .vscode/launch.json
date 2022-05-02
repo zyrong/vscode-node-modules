@@ -22,6 +22,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
+        "--disable-extensions", // 禁用除当前正在测试插件以外的其他插件
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
 			],

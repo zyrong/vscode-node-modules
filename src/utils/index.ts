@@ -1,6 +1,7 @@
 import { workspace, Location, Uri, Position, window } from "vscode";
 import { existsSync, readFileSync, statSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
+import { NODE_MODULES, PACKAGE_JSON } from "../types";
 
 export function isFile(path: string): Boolean {
   try {
@@ -75,6 +76,29 @@ export const isMonorepoProject = (projectRootDir: string) => {
   }
   return isLerna || yarnworkspaces;
 };
+
+export function getPkgPath(pkgName: string, startPath: string, endPath: string){
+  let destPath: string = "";
+  const isOrganizePkg = pkgName.startsWith("@");
+  const pkgNamePath = isOrganizePkg ? pkgName.split("/") : [pkgName];
+  // 从package.json所在目录的node_modules寻找，直到根目录的node_modules停止。
+  let end = false;
+  let currentDirPath = startPath;
+  do {
+    currentDirPath = dirname(currentDirPath);
+    destPath = join(
+      currentDirPath,
+      NODE_MODULES,
+      ...pkgNamePath,
+      PACKAGE_JSON
+    );
+    if (existsSync(destPath)) {
+      return dirname(destPath);
+    }
+    end = endPath === currentDirPath;
+  } while (!end);
+  return undefined;
+}
 
 // 生成 vscode.location对象 用来让vscode跳转到指定文件的指定位置
 export const genFileLocation = (

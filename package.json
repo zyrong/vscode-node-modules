@@ -80,9 +80,11 @@
   "devDependencies": {
     "@commitlint/cli": "^15.0.0",
     "@commitlint/config-conventional": "^15.0.0",
+    "@types/babel__traverse": "^7.17.1",
     "@types/glob": "^7.1.4",
     "@types/mocha": "^9.0.0",
     "@types/node": "14.x",
+    "@types/validate-npm-package-name": "^3.0.3",
     "@types/vscode": "^1.43.1",
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
@@ -112,5 +114,11 @@
     "type": "git",
     "url": "https://github.com/zyrong/vscode-node-modules"
   },
-  "homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md"
+  "homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md",
+  "dependencies": {
+    "@babel/parser": "^7.17.10",
+    "@babel/traverse": "^7.17.10",
+    "@babel/types": "^7.17.10",
+    "validate-npm-package-name": "^4.0.0"
+  }
 }
