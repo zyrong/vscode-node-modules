@@ -3,5 +3,17 @@
   "cmd.Searchnm":"搜索 node_modules",
   "tip.workspaceNoOpenProject":"当前工作区没有打开项目",
   "tip.selectSearchProject":"请选择要搜索node_modules的项目",
-  "tip.notFoundPackage":"找不到对应的package，可能还未安装？"
+  "tip.notFoundPackage":"找不到对应的package，可能还未安装？",
+  "walkthrough.start.title":"开始使用 node_modules",
+  "walkthrough.start.description":"了解 Visual Studio Code 的 node_modules 扩展",
+  "walkthrough.start.openFolder.title":"打开一个工作区文件夹",
+  "walkthrough.start.openFolder.description": "打开一个工作区文件夹，开始使用 node_modules 扩展功能。\n[Open Folder](command:workbench.action.files.openFolder)",
+  "walkthrough.start.pkgjson_dep_definition.title": "转到 node_modules",
+  "walkthrough.start.pkgjson_dep_definition.description": "在package.json文件中 `按住ctrl`+`点击packageName`将跳转到node_modules对应package目录下.",
+  "walkthrough.start.searchPackage.title":"搜索 Package",
+  "walkthrough.start.searchPackage.description":"对 node_modules文件夹 点击右键，在弹出的菜单，点击搜索 Package，可以对node_modules的package进行搜索。\n[Search Package](command:extension.search.package)",
+  "walkthrough.start.searchNode_modules.title":"搜索 node_modules",
+  "walkthrough.start.searchNode_modules.description":"在弹出的菜单中，点击搜索 node_modules，可以对node_modules进行路径搜索。\n[Search node_modules](command:extension.search.node_modules)",
+  "walkthrough.start.hoverPackageName.title":"悬停 PackageName",
+  "walkthrough.start.hoverPackageName.description":"在`.ts` `.js` `.jsx` `.tsx` `.vue`文件中导入package，鼠标移动到`PackageName`上，将会得到相关提示。"
 }
