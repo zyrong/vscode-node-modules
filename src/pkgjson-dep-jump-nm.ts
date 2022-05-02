@@ -15,6 +15,7 @@ import {
   genFileLocation,
   error,
   getDepsOffsetRange,
+  getPkgPath,
 } from "./utils/index";
 import t from "./utils/localize";
 import { NODE_MODULES, PACKAGE_JSON } from "./types";
@@ -55,28 +56,14 @@ async function provideDefinition(
       error("寻找项目根目录失败");
       return;
     }
-    let destPath: string = "";
-    const pkgName = word.replace(/"/g, "");
-    const isOrganizePkg = pkgName.startsWith("@");
-    const pkgNamePath = isOrganizePkg ? pkgName.split("/") : [pkgName];
-    // 从package.json所在目录的node_modules寻找，直到根目录的node_modules停止。
-    let isRootDir = false;
-    let currentDirPath = filepath;
-    do {
-      currentDirPath = dirname(currentDirPath);
-      destPath = join(
-        currentDirPath,
-        NODE_MODULES,
-        ...pkgNamePath,
-        PACKAGE_JSON
-      );
-      if (existsSync(destPath)) {
-        return genFileLocation(destPath); // return location，字符串就会变成一个可以点击的链接
-      }
-      isRootDir = rootDir === currentDirPath;
-    } while (!isRootDir);
 
-    window.showInformationMessage(t("tip.notFoundPackage"));
+    const pkgName = word.replace(/"/g, "");
+    const pkgPath = getPkgPath(pkgName, filepath, rootDir);
+    if (!pkgPath) {
+      window.showInformationMessage(t("tip.notFoundPackage"));
+      return;
+    }
+    return genFileLocation(join(pkgPath, PACKAGE_JSON)); // return location，字符串就会变成一个可以点击的链接
   }
 }
 
