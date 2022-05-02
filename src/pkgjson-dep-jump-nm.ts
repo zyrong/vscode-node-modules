@@ -36,12 +36,13 @@ async function provideDefinition(
     // line.text // 光标行对应的那行文本内容
 
     const depsOffsetRange = getDepsOffsetRange(json);
-    const pkgNameRegex = new RegExp(`${word}(?=\s*:)`);
+    const pkgNameRegex = new RegExp(`${word}\\s*:`);
     let isHoverPkgName = false;
     for (const [key, value] of Object.entries(depsOffsetRange)) {
       const [sIdx, eIdx] = value;
+      const depsText = json.slice(sIdx, eIdx);
       if (offset >= sIdx && offset <= eIdx) { // check点击范围
-        if (pkgNameRegex.test(json.slice(sIdx, eIdx))) { // check pkgName
+        if (pkgNameRegex.test(depsText)) { // check pkgName
           isHoverPkgName = true;
           break;
         }
@@ -57,7 +58,7 @@ async function provideDefinition(
       return;
     }
 
-    const pkgName = word.replace(/"/g, "");
+    const pkgName = word.replace(/"\s*/g, "");
     const pkgPath = getPkgPath(pkgName, filepath, rootDir);
     if (!pkgPath) {
       window.showInformationMessage(t("tip.notFoundPackage"));

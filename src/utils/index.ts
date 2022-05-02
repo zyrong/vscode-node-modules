@@ -41,7 +41,7 @@ export const getDepsOffsetRange = function (
 ): DepsOffsetRange {
   // match deps range string
   // /(?<="(?:peerDependencies|dependencies|devDependencies)"[^\{]*?\{)[^\}]*([\s\S]*?)[^\}]*/g
-  const regex = /"(peerDependencies|dependencies|devDependencies)"[^\{]*?\{/g;
+  const regex = /"(peerDependencies|dependencies|devDependencies)"\s*:\s*\{/g;
   const result: DepsOffsetRange = {};
   for (let i = 0; i < 3; i++) {
     const match = regex.exec(packageJson);
