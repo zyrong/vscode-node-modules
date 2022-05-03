@@ -161,28 +161,26 @@ class HoverTip implements HoverProvider {
         repositoryUrl = 'https://github.com/nodejs/node';
       } else {
         const pkgPath = getPkgPath(pkgName, document.uri.path, rootDir);
-        if (!pkgPath) {
-          // 该包可能未安装
-          resolve(undefined);
-          return;
-        }
+        if (pkgPath) {
+          const pkgJsonBuffer = await readFile(join(pkgPath, PACKAGE_JSON));
+          const pkgJson = JSON.parse(pkgJsonBuffer.toString());
 
-        const pkgJsonBuffer = await readFile(join(pkgPath, PACKAGE_JSON));
-        const pkgJson = JSON.parse(pkgJsonBuffer.toString());
-
-        if (pkgJson.homepage) {
-          homepageUrl = matchUrl(pkgJson.homepage);
-        }
-        if (pkgJson.repository && pkgJson.repository.url) {
-          repositoryUrl = matchUrl(pkgJson.repository.url);
-        }
-        if (!repositoryUrl && pkgJson.bugs && pkgJson.bugs.url) {
-          let url = matchUrl(pkgJson.bugs.url);
-          const idx = url.indexOf('/issues');
-          if (idx !== -1) {
-            url = url.slice(0, idx);
+          if (pkgJson.homepage) {
+            homepageUrl = matchUrl(pkgJson.homepage);
           }
-          repositoryUrl = url;
+          if (pkgJson.repository && pkgJson.repository.url) {
+            repositoryUrl = matchUrl(pkgJson.repository.url);
+          }
+          if (!repositoryUrl && pkgJson.bugs && pkgJson.bugs.url) {
+            let url = matchUrl(pkgJson.bugs.url);
+            const idx = url.indexOf('/issues');
+            if (idx !== -1) {
+              url = url.slice(0, idx);
+            }
+            repositoryUrl = url;
+          }
+        } else {
+          // 该包可能未安装
         }
       }
 
