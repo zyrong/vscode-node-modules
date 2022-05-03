@@ -12,6 +12,7 @@ import {
   MarkdownString,
   ProviderResult,
   Uri,
+  env,
   CancellationTokenSource,
   workspace
 } from "vscode";
@@ -22,6 +23,7 @@ import { error, getFileInProjectRootDir, getPkgPath } from "./utils";
 import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
 import { readFile } from 'fs/promises';
+import * as isBuiltinModule from 'is-builtin-module';
 
 function inRange(range: { start: number | null, end: number | null }, val: number) {
   return range.start && range.end && val >= range.start && val <= range.end;
@@ -140,7 +142,6 @@ class HoverTip implements HoverProvider {
 
     if (!isImport) { return; };
 
-    // TODO: node内置模块，跳转
 
     const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/);
     if (!pkgNameMatch) { error('pkgname match error'); return; }
@@ -152,33 +153,41 @@ class HoverTip implements HoverProvider {
       return;
     }
 
-
-    const pkgPath = getPkgPath(pkgName, document.uri.path, rootDir);
-    if (!pkgPath) {
-      // 该包可能未安装
-      return;
-    }
-
     return new Promise(async (resolve, reject) => {
-      const pkgJsonBuffer = await readFile(join(pkgPath, PACKAGE_JSON));
-      const pkgJson = JSON.parse(pkgJsonBuffer.toString());
-      let homepageUrl = '', repositoryUrl = '';
-      if (pkgJson.homepage) {
-        homepageUrl = matchUrl(pkgJson.homepage);
-      }
-      if (pkgJson.repository && pkgJson.repository.url) {
-        repositoryUrl = matchUrl(pkgJson.repository.url);
-      }
-      if (!repositoryUrl && pkgJson.bugs && pkgJson.bugs.url) {
-        let url = matchUrl(pkgJson.bugs.url);
-        const idx = url.indexOf('/issues');
-        if (idx !== -1) {
-          url = url.slice(0, idx);
+      let markdown,
+        homepageUrl = '', repositoryUrl = '';
+      if (isBuiltinModule(pkgName)) {
+        homepageUrl = `https://nodejs.org/${env.language}/`;
+        repositoryUrl = 'https://github.com/nodejs/node';
+      } else {
+        const pkgPath = getPkgPath(pkgName, document.uri.path, rootDir);
+        if (!pkgPath) {
+          // 该包可能未安装
+          resolve(undefined);
+          return;
         }
-        repositoryUrl = url;
+
+        const pkgJsonBuffer = await readFile(join(pkgPath, PACKAGE_JSON));
+        const pkgJson = JSON.parse(pkgJsonBuffer.toString());
+
+        if (pkgJson.homepage) {
+          homepageUrl = matchUrl(pkgJson.homepage);
+        }
+        if (pkgJson.repository && pkgJson.repository.url) {
+          repositoryUrl = matchUrl(pkgJson.repository.url);
+        }
+        if (!repositoryUrl && pkgJson.bugs && pkgJson.bugs.url) {
+          let url = matchUrl(pkgJson.bugs.url);
+          const idx = url.indexOf('/issues');
+          if (idx !== -1) {
+            url = url.slice(0, idx);
+          }
+          repositoryUrl = url;
+        }
       }
+
       // command uri: https://liiked.github.io/VS-Code-Extension-Doc-ZH/#/extension-guides/command?id=%e5%91%bd%e4%bb%a4%e7%9a%84urls
-      let markdown = `<span style="color:#569CD6;">${pkgName}</span>${getSpaceString(2)}`;
+      markdown = `<span style="color:#569CD6;">${pkgName}</span>${getSpaceString(2)}`;
       if (homepageUrl) {
         markdown += `[HomePage](${homepageUrl})${getSpaceString(4)}`;
       }
@@ -186,11 +195,11 @@ class HoverTip implements HoverProvider {
         markdown += `[Repository](${repositoryUrl})${getSpaceString(4)}`;
       }
       markdown += `[NPM](https://www.npmjs.com/package/${pkgName})`;
+
       const contents = new MarkdownString(markdown);
       contents.isTrusted = true;
       contents.supportHtml = true;
       resolve(new Hover(contents));
-
     });
   }
 }
@@ -198,8 +207,7 @@ class HoverTip implements HoverProvider {
 export default function (context: ExtensionContext) {
   context.subscriptions.push(
     languages.registerHoverProvider(
-      // 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'vue'
-      ['*'],
+      ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'vue'],
       new HoverTip
     )
   );
