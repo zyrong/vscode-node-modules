@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/zyrong/vscode-node-modules/compare/v1.2.0...v1.3.0) (2022-05-03)
+
+
+### Features
+
+* change Extension emit mode , add hoverTip node built-in module support ([4e0162f](https://github.com/zyrong/vscode-node-modules/commit/4e0162f5e440a7989d14df18dec61ba2ccfedb8f))
+* hoverTip support typescript require import ([a6f7799](https://github.com/zyrong/vscode-node-modules/commit/a6f7799339427acd0a414d7cea37b102c9b2f69c))
+
 ## [1.2.0](https://github.com/zyrong/vscode-node-modules/compare/v1.1.4...v1.2.0) (2022-05-02)
 
 
