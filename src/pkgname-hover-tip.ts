@@ -55,9 +55,17 @@ class HoverTip implements HoverProvider {
   ): ProviderResult<Hover> {
     const range = document.getWordRangeAtPosition(position);
     const hoverWord = document.getText(range);
+    if (!hoverWord) { return; };
+
     const textLine = document.lineAt(position.line);
     const hoverRowText = textLine.text;
-    const fullPkgPathRegex = new RegExp(`['"]([^'"\`\\s~!();*]*${hoverWord}[^'"\`\\s~!();*]*)['"]`);
+    let fullPkgPathRegex;
+    try {
+      fullPkgPathRegex = new RegExp(`['"]([^'"\`\\s~!();*]*${hoverWord}[^'"\`\\s~!();*]*)['"]`);
+    } catch (err: any) {
+      error(err);
+      return;
+    }
     const match = hoverRowText.match(fullPkgPathRegex);
 
     // 排除不符合pkgname的字符串
@@ -94,16 +102,31 @@ class HoverTip implements HoverProvider {
     }
 
 
+    // 正则匹配，可能存在想不到的情况，暂时不考虑，例如: code = "import a from 'xxx'" // 一个包含import的字符串
+    // const pkgname = 'xxx'
+    // const pkgnameRegex = new RegExp(`['"]${pkgname}['"]`).source
+    // const import_export_from_Regex = new RegExp(`(?:import|export)[^'";]+from\\s*${pkgnameRegex}`)
+    // const onlyImportRegex = new RegExp(`import\\s*${pkgnameRegex}`)
+    // const requireRegex = new RegExp(`require\\s*\\(\\s*${pkgnameRegex}\\s*\\)`)
+    // const finalImportRegex = new RegExp(`${import_export_from_Regex.source}|${onlyImportRegex.source}|${requireRegex.source}`)
+
+
     // 检查是否以下导入import、export、require()
     let isImport = false;
 
-    const ast = parse(upperPartText, {
-      sourceType: 'module',
-      ranges: false,
-      startLine: 0, // position.line的起始行号为0，保持一致
-      errorRecovery: true, // 兼容 upperPartText 存在截取错误情况
-      plugins: ['typescript']
-    });
+    let ast;
+    try {
+      ast = parse(upperPartText, {
+        sourceType: 'module',
+        ranges: false,
+        startLine: 0, // position.line的起始行号为0，保持一致
+        errorRecovery: true, // 兼容 upperPartText 存在截取错误情况
+        plugins: ['typescript']
+      });
+    } catch (err: any) {
+      error(err);
+      return;
+    }
 
 
     traverse(ast, {
