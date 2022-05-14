@@ -53,29 +53,50 @@ class HoverTip implements HoverProvider {
     position: Position,
     token: CancellationToken
   ): ProviderResult<Hover> {
+    const start = Date.now();
     const range = document.getWordRangeAtPosition(position);
+    if (range === undefined) { return; }
+    
     const hoverWord = document.getText(range);
     if (!hoverWord) { return; };
 
     const textLine = document.lineAt(position.line);
-    const hoverRowText = textLine.text;
-    let fullPkgPathRegex;
-    try {
-      fullPkgPathRegex = new RegExp(`['"]([^'"\`\\s~!();*]*${hoverWord}[^'"\`\\s~!();*]*)['"]`);
-    } catch (err: any) {
-      error(err);
+    const lineText = textLine.text;
+    const quotas = new Set(["'", '"', '`']);
+    const pkgNameCharRegexp = /^[\w./@-]$/;
+    let leftQuotaIndex: number | undefined;
+    for (let i = range.start.character; i >= 0 ; i--) {
+      const char = lineText[i];
+
+      if (quotas.has(char))  {
+        leftQuotaIndex = i;
+        break;
+      }
+      
+      if (!pkgNameCharRegexp.test(char)) {
+        break;
+      }
+    }
+    let rightQuotaIndex: number | undefined;
+    for (let i = range.end.character; i < lineText.length; i++) {
+      const char = lineText[i];
+
+      if (quotas.has(lineText[i])) {
+        rightQuotaIndex = i;
+        break;
+      }
+      
+      if (!pkgNameCharRegexp.test(char)) {
+        break;
+      }
+    }
+    if (leftQuotaIndex === undefined || rightQuotaIndex === undefined || lineText[leftQuotaIndex] !== lineText[rightQuotaIndex]) {
       return;
     }
-    const match = hoverRowText.match(fullPkgPathRegex);
-
-    // 排除不符合pkgname的字符串
-    if (!match) { return; }
-
-    const fullPkgPath = match[1];
+    const fullPkgPath = lineText.slice(leftQuotaIndex + 1, rightQuotaIndex);
 
     // 排除相对路径
     if (fullPkgPath[0] === '.') { return; };
-
 
     const nextLinePosition = new Position(position.line + 1, 0);
     const nextLineoffset = document.offsetAt(nextLinePosition);
@@ -220,6 +241,7 @@ class HoverTip implements HoverProvider {
       const contents = new MarkdownString(markdown);
       contents.isTrusted = true;
       contents.supportHtml = true;
+      console.log(Date.now() -start, 'ms');
       resolve(new Hover(contents));
     });
   }
