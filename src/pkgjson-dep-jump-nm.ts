@@ -15,6 +15,7 @@ import {
   genFileLocation,
   error,
   getDepsOffsetRange,
+  getPkgPath,
 } from "./utils/index";
 import t from "./utils/localize";
 import { NODE_MODULES, PACKAGE_JSON } from "./types";
@@ -35,12 +36,13 @@ async function provideDefinition(
     // line.text // 光标行对应的那行文本内容
 
     const depsOffsetRange = getDepsOffsetRange(json);
-    const pkgNameRegex = new RegExp(`${word}(?=\s*:)`);
+    const pkgNameRegex = new RegExp(`${word}\\s*:`);
     let isHoverPkgName = false;
     for (const [key, value] of Object.entries(depsOffsetRange)) {
       const [sIdx, eIdx] = value;
+      const depsText = json.slice(sIdx, eIdx);
       if (offset >= sIdx && offset <= eIdx) { // check点击范围
-        if (pkgNameRegex.test(json.slice(sIdx, eIdx))) { // check pkgName
+        if (pkgNameRegex.test(depsText)) { // check pkgName
           isHoverPkgName = true;
           break;
         }
@@ -55,28 +57,14 @@ async function provideDefinition(
       error("寻找项目根目录失败");
       return;
     }
-    let destPath: string = "";
-    const pkgName = word.replace(/"/g, "");
-    const isOrganizePkg = pkgName.startsWith("@");
-    const pkgNamePath = isOrganizePkg ? pkgName.split("/") : [pkgName];
-    // 从package.json所在目录的node_modules寻找，直到根目录的node_modules停止。
-    let isRootDir = false;
-    let currentDirPath = filepath;
-    do {
-      currentDirPath = dirname(currentDirPath);
-      destPath = join(
-        currentDirPath,
-        NODE_MODULES,
-        ...pkgNamePath,
-        PACKAGE_JSON
-      );
-      if (existsSync(destPath)) {
-        return genFileLocation(destPath); // return location，字符串就会变成一个可以点击的链接
-      }
-      isRootDir = rootDir === currentDirPath;
-    } while (!isRootDir);
 
-    window.showInformationMessage(t("tip.notFoundPackage"));
+    const pkgName = word.replace(/"\s*/g, "");
+    const pkgPath = getPkgPath(pkgName, filepath, rootDir);
+    if (!pkgPath) {
+      window.showInformationMessage(t("tip.notFoundPackage"));
+      return;
+    }
+    return genFileLocation(join(pkgPath, PACKAGE_JSON)); // return location，字符串就会变成一个可以点击的链接
   }
 }
 
@@ -84,7 +72,7 @@ export default function (context: ExtensionContext) {
   // 注册如何实现跳转到定义，第一个参数表示仅对json文件生效
   context.subscriptions.push(
     languages.registerDefinitionProvider(["json"], {
-      provideDefinition, // 当按住Ctrl键时鼠标hover文本内容就会触发该函数
+      provideDefinition, // 当按住Ctrl键时鼠标hover文本内容 或 右键转到定义时 就会触发该函数
     })
   );
 }

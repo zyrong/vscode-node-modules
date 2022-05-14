@@ -10,7 +10,7 @@
     "goto",
     "jump"
   ],
-  "version": "1.1.4",
+  "version": "1.3.0",
   "engines": {
     "vscode": "^1.43.1"
   },
@@ -24,6 +24,11 @@
   ],
   "activationEvents": [
     "onLanguage:json",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:vue",
     "onCommand:extension.search.package",
     "onCommand:extension.search.node_modules"
   ],
@@ -64,6 +69,83 @@
         "mac": "cmd+k n",
         "key": "ctrl+k n"
       }
+    ],
+    "walkthroughs": [
+      {
+        "id": "node_modules start",
+        "title": "%walkthrough.start.title%",
+        "featuredFor": [
+          "node_modules",
+          "package.json"
+        ],
+        "description": "%walkthrough.start.description%",
+        "steps": [
+          {
+            "id": "openFolder",
+            "title": "%walkthrough.start.openFolder.title%",
+            "completionEvents": [
+              "onCommand:workbench.action.files.openFolder"
+            ],
+            "when": "workspaceFolderCount == 0",
+            "description": "%walkthrough.start.openFolder.description%",
+            "media": {
+              "markdown": "resources/walkthroughs/empty.md"
+            }
+          },
+          {
+            "id": "pkgjson-dep-jump-nm",
+            "title": "%walkthrough.start.pkgjson_dep_definition.title%",
+            "completionEvents": [
+              "onStepSelected"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.pkgjson_dep_definition.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "search Package",
+            "title": "%walkthrough.start.searchPackage.title%",
+            "completionEvents": [
+              "onCommand:extension.search.package"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.searchPackage.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/2.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "search node_modules",
+            "title": "%walkthrough.start.searchNode_modules.title%",
+            "completionEvents": [
+              "onCommand:extension.search.node_modules"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.searchNode_modules.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "hover packageName",
+            "title": "%walkthrough.start.hoverPackageName.title%",
+            "completionEvents": [
+              "onStepSelected"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.hoverPackageName.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif",
+              "altText": ""
+            }
+          }
+        ]
+      }
     ]
   },
   "scripts": {
@@ -80,9 +162,11 @@
   "devDependencies": {
     "@commitlint/cli": "^15.0.0",
     "@commitlint/config-conventional": "^15.0.0",
+    "@types/babel__traverse": "^7.17.1",
     "@types/glob": "^7.1.4",
     "@types/mocha": "^9.0.0",
     "@types/node": "14.x",
+    "@types/validate-npm-package-name": "^3.0.3",
     "@types/vscode": "^1.43.1",
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
@@ -112,5 +196,12 @@
     "type": "git",
     "url": "https://github.com/zyrong/vscode-node-modules"
   },
-  "homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md"
+  "homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md",
+  "dependencies": {
+    "@babel/parser": "^7.17.10",
+    "@babel/traverse": "^7.17.10",
+    "@babel/types": "^7.17.10",
+    "is-builtin-module": "^3.1.0",
+    "validate-npm-package-name": "^4.0.0"
+  }
 }

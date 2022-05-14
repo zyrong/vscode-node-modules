@@ -1,14 +1,18 @@
 import { ExtensionContext, commands } from "vscode";
 
 export function activate(context: ExtensionContext) {
-  import("./pkgjson-dep-jump-nm").then(({ default: packageJsonJumpToNodeModules }) => {
+  import('./pkgjson-dep-jump-nm').then(({ default: packageJsonJumpToNodeModules }) => {
       packageJsonJumpToNodeModules(context);
   });
+
+  import('./pkgname-hover-tip').then(({ default: pkgnameHoverTip }) => {
+    pkgnameHoverTip(context);
+});
 
 
   context.subscriptions.push(
     commands.registerCommand("extension.search.package", async (uri) => {
-      import("./search-package").then(({ default: searchPackage }) => {
+      import('./search-package').then(({ default: searchPackage }) => {
           searchPackage(uri);
       });
     })
@@ -16,7 +20,7 @@ export function activate(context: ExtensionContext) {
 
   context.subscriptions.push(
     commands.registerCommand("extension.search.node_modules", async (uri) => {
-      import("./search-node_modules").then(({ default: searchNodeModules }) => {
+      import('./search-node_modules').then(({ default: searchNodeModules }) => {
           searchNodeModules(uri);
       });
     })

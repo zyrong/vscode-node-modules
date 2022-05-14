@@ -10,7 +10,6 @@ function format(message: string, args: string[] = []): string {
 
 function init(language: string) {
   let bundle: any = require("./en").default;
-  console.log("🚀 ~ file: index.ts ~ line 13 ~ init ~ bundle", bundle);
 
   try {
     const langpkg = require(`./${language}`);
