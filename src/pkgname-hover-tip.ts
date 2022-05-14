@@ -80,7 +80,7 @@ class HoverTip implements HoverProvider {
 
     const leftQuotaIndex = findQuota(hoverRowText, range.start.character + 1, range.start.character, -1);
     if (leftQuotaIndex === -1) { return; };
-    const rightQuotaIndex = findQuota(hoverRowText, hoverRowText.length - range.end.character - 1, range.end.character + 1, 1);
+    const rightQuotaIndex = findQuota(hoverRowText, hoverRowText.length - range.end.character, range.end.character, 1);
     if (rightQuotaIndex === -1) { return; };
 
     const fullPkgPath = hoverRowText.slice(leftQuotaIndex + 1, rightQuotaIndex);
