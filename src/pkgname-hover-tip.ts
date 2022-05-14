@@ -18,7 +18,7 @@ import {
 } from "vscode";
 import { parse, ParserOptions } from '@babel/parser';
 import traverse from "@babel/traverse";
-import { isIdentifier, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
+import { isIdentifier, isImport, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
 import { error, getFileInProjectRootDir, getPkgPath } from "./utils";
 import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
@@ -137,7 +137,7 @@ class HoverTip implements HoverProvider {
 
 
     // 检查是否以下导入import、export、require()、import()
-    let isImport = false;
+    let isImportPkg = false;
 
     try {
       let ast;
@@ -163,33 +163,33 @@ class HoverTip implements HoverProvider {
 
       traverse(ast, {
         CallExpression(path) {
-          if (isImport) { return; };
+          if (isImportPkg) { return; };
           const { callee, arguments: arguments_ } = path.node;
-          if (isIdentifier(callee) && (callee.name === 'require' || callee.name === 'import') && arguments_.length === 1) {
+          if ((isIdentifier(callee) && (callee.name === 'require') || isImport(callee)) && arguments_.length === 1) {
             const arg1 = arguments_[0];
             if (isStringLiteral(arg1) && inRange(arg1, offset)) {
-              isImport = true;
+              isImportPkg = true;
             }
           }
         },
         ImportDeclaration(path) {
-          if (isImport) { return; };
+          if (isImportPkg) { return; };
           const { source } = path.node;
           if (inRange(source, offset)) {
-            isImport = true;
+            isImportPkg = true;
           }
         },
         ExportNamedDeclaration(path) {
-          if (isImport) { return; };
+          if (isImportPkg) { return; };
           const { source } = path.node;
           if (isStringLiteral(source) && inRange(source, offset)) {
-            isImport = true;
+            isImportPkg = true;
           }
         },
         TSImportEqualsDeclaration(path) {
-          if (isImport) { return; };
+          if (isImportPkg) { return; };
           if (isTSExternalModuleReference(path.node.moduleReference) && inRange(path.node.moduleReference.expression, offset)) {
-            isImport = true;
+            isImportPkg = true;
           }
         }
       });
@@ -198,7 +198,7 @@ class HoverTip implements HoverProvider {
       return;
     }
 
-    if (!isImport) { return; };
+    if (!isImportPkg) { return; };
 
     const rootDir = getFileInProjectRootDir(document.uri.path);
     if (!rootDir) {
