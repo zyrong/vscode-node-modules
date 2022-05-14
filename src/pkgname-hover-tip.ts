@@ -24,6 +24,8 @@ import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
 import { readFile } from 'fs/promises';
 import * as isBuiltinModule from 'is-builtin-module';
+import * as validate from 'validate-npm-package-name';
+
 
 function inRange(range: { start: number | null, end: number | null }, val: number) {
   return range.start && range.end && val >= range.start && val <= range.end;
@@ -47,6 +49,21 @@ function getSpaceString(num: number) {
   return result;
 }
 
+function findQuota(text: string, eachNum: number, start: number, step: number) {
+  const quotas = new Set(["'", '"']);
+  let quotaIdx = -1;
+  // 查找距离hover最近的/'|"/
+  while (eachNum > 0) {
+    const char = text[start];
+    if (quotas.has(char)) {
+      quotaIdx = start;
+      break;
+    }
+    start += step;
+    eachNum--;
+  }
+  return quotaIdx;
+}
 class HoverTip implements HoverProvider {
   provideHover(
     document: TextDocument,
@@ -54,27 +71,30 @@ class HoverTip implements HoverProvider {
     token: CancellationToken
   ): ProviderResult<Hover> {
     const range = document.getWordRangeAtPosition(position);
+    if (!range) { return; };
     const hoverWord = document.getText(range);
     if (!hoverWord) { return; };
 
     const textLine = document.lineAt(position.line);
     const hoverRowText = textLine.text;
-    let fullPkgPathRegex;
-    try {
-      fullPkgPathRegex = new RegExp(`['"]([^'"\`\\s~!();*]*${hoverWord}[^'"\`\\s~!();*]*)['"]`);
-    } catch (err: any) {
-      error(err);
-      return;
-    }
-    const match = hoverRowText.match(fullPkgPathRegex);
 
-    // 排除不符合pkgname的字符串
-    if (!match) { return; }
+    const leftQuotaIndex = findQuota(hoverRowText, range.start.character + 1, range.start.character, -1);
+    if (leftQuotaIndex === -1) { return; };
+    const rightQuotaIndex = findQuota(hoverRowText, hoverRowText.length - range.end.character - 1, range.end.character + 1, 1);
+    if (rightQuotaIndex === -1) { return; };
 
-    const fullPkgPath = match[1];
+    const fullPkgPath = hoverRowText.slice(leftQuotaIndex + 1, rightQuotaIndex);
 
     // 排除相对路径
     if (fullPkgPath[0] === '.') { return; };
+
+    const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/);
+    if (!pkgNameMatch) { error('pkgname match error'); return; }
+    const pkgName = pkgNameMatch[1];
+
+    if (!validate(pkgName).validForOldPackages) {
+      return;
+    }
 
 
     const nextLinePosition = new Position(position.line + 1, 0);
@@ -164,11 +184,6 @@ class HoverTip implements HoverProvider {
     });
 
     if (!isImport) { return; };
-
-
-    const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/);
-    if (!pkgNameMatch) { error('pkgname match error'); return; }
-    const pkgName = pkgNameMatch[1];
 
     const rootDir = getFileInProjectRootDir(document.uri.path);
     if (!rootDir) {
