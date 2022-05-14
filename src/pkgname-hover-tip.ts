@@ -16,7 +16,7 @@ import {
   CancellationTokenSource,
   workspace
 } from "vscode";
-import { parse } from '@babel/parser';
+import { parse, ParserOptions } from '@babel/parser';
 import traverse from "@babel/traverse";
 import { isIdentifier, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
 import { error, getFileInProjectRootDir, getPkgPath } from "./utils";
@@ -99,27 +99,32 @@ class HoverTip implements HoverProvider {
 
     const nextLinePosition = new Position(position.line + 1, 0);
     const nextLineoffset = document.offsetAt(nextLinePosition);
-    const text = document.getText();
-    let upperPartText = text.slice(0, nextLineoffset);
-    let offset = document.offsetAt(position);
+    let jscode = document.getText();
 
+    let offset = document.offsetAt(position);
     if (document.languageId === 'vue') {
-      const idx = upperPartText.indexOf('<script');
-      if (idx !== -1) {
-        const scriptLabelRegex = /<script.*?>/;
-        const scriptText = upperPartText.slice(idx);
-        offset -= idx;
-        const match = scriptText.match(scriptLabelRegex);
-        if (match) {
-          upperPartText = scriptText.slice(match[0].length);
-          offset -= match[0].length;
+      const startScriptIdx = jscode.indexOf('<script');
+      const endScriptIdx = jscode.lastIndexOf('</script');
+
+      if (startScriptIdx !== -1 && endScriptIdx !== -1) {
+        const startScriptLabelRegex = /<script.*?>/;
+        let scriptRangeCode = jscode.slice(startScriptIdx, endScriptIdx);
+        offset -= startScriptIdx; // 同步offset与code的关系
+        const matchFullStartScriptLabel = scriptRangeCode.match(startScriptLabelRegex);
+        if (matchFullStartScriptLabel) {
+          scriptRangeCode = scriptRangeCode.slice(matchFullStartScriptLabel[0].length);
+          offset -= matchFullStartScriptLabel[0].length;
+          jscode = scriptRangeCode;
         } else {
           error('match vue <script> error');
+          return;
         }
       } else {
         error('not found <script>');
+        return;
       }
     }
+    let upperPartText = jscode.slice(0, nextLineoffset);
 
 
     // 正则匹配，可能存在想不到的情况，暂时不考虑，例如: code = "import a from 'xxx'" // 一个包含import的字符串
@@ -127,61 +132,71 @@ class HoverTip implements HoverProvider {
     // const pkgnameRegex = new RegExp(`['"]${pkgname}['"]`).source
     // const import_export_from_Regex = new RegExp(`(?:import|export)[^'";]+from\\s*${pkgnameRegex}`)
     // const onlyImportRegex = new RegExp(`import\\s*${pkgnameRegex}`)
-    // const requireRegex = new RegExp(`require\\s*\\(\\s*${pkgnameRegex}\\s*\\)`)
-    // const finalImportRegex = new RegExp(`${import_export_from_Regex.source}|${onlyImportRegex.source}|${requireRegex.source}`)
+    // const dynamic_import_require_Regex = new RegExp(`(?:import|require)\\s*\\(\\s*${pkgnameRegex}\\s*\\)`)
+    // const finalImportRegex = new RegExp(`${import_export_from_Regex.source}|${onlyImportRegex.source}|${dynamic_import_require_Regex.source}`)
 
 
-    // 检查是否以下导入import、export、require()
+    // 检查是否以下导入import、export、require()、import()
     let isImport = false;
 
-    let ast;
     try {
-      ast = parse(upperPartText, {
+      let ast;
+      const parserOptions: ParserOptions = {
         sourceType: 'module',
         ranges: false,
         startLine: 0, // position.line的起始行号为0，保持一致
-        errorRecovery: true, // 兼容 upperPartText 存在截取错误情况
+        errorRecovery: true, // 兼容部分 upperPartText 存在截取错误情况
         plugins: ['typescript']
+      };
+      try {
+        ast = parse(upperPartText, parserOptions);
+      } catch (err) {
+        try {
+          // 如果使用upperPartText优化，当遇到代码中非顶层的动态import或require的情况会很容易导致paser解析失败！
+          // 尝试对整个code生成ast 或者 可以考虑不支持非顶层的动态import或require提示。
+          ast = parse(jscode, parserOptions);
+        } catch (err: any) {
+          error(err);
+          return;
+        }
+      }
+
+      traverse(ast, {
+        CallExpression(path) {
+          if (isImport) { return; };
+          const { callee, arguments: arguments_ } = path.node;
+          if (isIdentifier(callee) && (callee.name === 'require' || callee.name === 'import') && arguments_.length === 1) {
+            const arg1 = arguments_[0];
+            if (isStringLiteral(arg1) && inRange(arg1, offset)) {
+              isImport = true;
+            }
+          }
+        },
+        ImportDeclaration(path) {
+          if (isImport) { return; };
+          const { source } = path.node;
+          if (inRange(source, offset)) {
+            isImport = true;
+          }
+        },
+        ExportNamedDeclaration(path) {
+          if (isImport) { return; };
+          const { source } = path.node;
+          if (isStringLiteral(source) && inRange(source, offset)) {
+            isImport = true;
+          }
+        },
+        TSImportEqualsDeclaration(path) {
+          if (isImport) { return; };
+          if (isTSExternalModuleReference(path.node.moduleReference) && inRange(path.node.moduleReference.expression, offset)) {
+            isImport = true;
+          }
+        }
       });
     } catch (err: any) {
       error(err);
       return;
     }
-
-
-    traverse(ast, {
-      CallExpression(path) {
-        if (isImport) { return; };
-        const { callee, arguments: arguments_ } = path.node;
-        if (isIdentifier(callee) && callee.name === 'require' && arguments_.length === 1) {
-          const arg1 = arguments_[0];
-
-          if (isStringLiteral(arg1) && inRange(arg1, offset)) {
-            isImport = true;
-          }
-        }
-      },
-      ImportDeclaration(path) {
-        if (isImport) { return; };
-        const { source } = path.node;
-        if (inRange(source, offset)) {
-          isImport = true;
-        }
-      },
-      ExportNamedDeclaration(path) {
-        if (isImport) { return; };
-        const { source } = path.node;
-        if (isStringLiteral(source) && inRange(source, offset)) {
-          isImport = true;
-        }
-      },
-      TSImportEqualsDeclaration(path) {
-        if (isImport) { return; };
-        if (isTSExternalModuleReference(path.node.moduleReference) && inRange(path.node.moduleReference.expression, offset)) {
-          isImport = true;
-        }
-      }
-    });
 
     if (!isImport) { return; };
 
