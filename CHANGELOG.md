@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/zyrong/vscode-node-modules/compare/v1.3.0...v1.4.0) (2022-05-15)
+
+
+### Features
+
+* add package name hover tip to support dynamic import ([8e3efa7](https://github.com/zyrong/vscode-node-modules/commit/8e3efa77c96c78924d2c151a290169fbb6b22a7e))
+* package not installed also shown npm navigation ([f44c371](https://github.com/zyrong/vscode-node-modules/commit/f44c371ac79efd87cefc238821ac8db36aa88f20))
+
+
+### Bug Fixes
+
+* dynamic import judgment ([966a4c9](https://github.com/zyrong/vscode-node-modules/commit/966a4c9741b19888182958217f6a1e20cfcf1c32))
+* remove多余的1 ([feda203](https://github.com/zyrong/vscode-node-modules/commit/feda2036d95edc850d3bf7b230d2c7c74b03f7ad))
+* 完善判断逻辑，捕获某些可能会抛出异常的情况 ([f6159aa](https://github.com/zyrong/vscode-node-modules/commit/f6159aabdf763a091e0b8fce89a06133b05bb3b7))
+
 ## [1.3.0](https://github.com/zyrong/vscode-node-modules/compare/v1.2.0...v1.3.0) (2022-05-03)
 
 
