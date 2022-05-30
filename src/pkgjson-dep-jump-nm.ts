@@ -71,7 +71,7 @@ async function provideDefinition(
 export default function (context: ExtensionContext) {
   // 注册如何实现跳转到定义，第一个参数表示仅对json文件生效
   context.subscriptions.push(
-    languages.registerDefinitionProvider(["json"], {
+    languages.registerDefinitionProvider(["json", "jsonc"], {
       provideDefinition, // 当按住Ctrl键时鼠标hover文本内容 或 右键转到定义时 就会触发该函数
     })
   );
