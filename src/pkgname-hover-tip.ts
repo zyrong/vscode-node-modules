@@ -163,33 +163,33 @@ class HoverTip implements HoverProvider {
 
       traverse(ast, {
         CallExpression(path) {
-          if (isImportPkg) { return; };
           const { callee, arguments: arguments_ } = path.node;
           if ((isIdentifier(callee) && (callee.name === 'require') || isImport(callee)) && arguments_.length === 1) {
             const arg1 = arguments_[0];
             if (isStringLiteral(arg1) && inRange(arg1, offset)) {
               isImportPkg = true;
+              path.stop();
             }
           }
         },
         ImportDeclaration(path) {
-          if (isImportPkg) { return; };
           const { source } = path.node;
           if (inRange(source, offset)) {
             isImportPkg = true;
+            path.stop();
           }
         },
         ExportNamedDeclaration(path) {
-          if (isImportPkg) { return; };
           const { source } = path.node;
           if (isStringLiteral(source) && inRange(source, offset)) {
             isImportPkg = true;
+            path.stop();
           }
         },
         TSImportEqualsDeclaration(path) {
-          if (isImportPkg) { return; };
           if (isTSExternalModuleReference(path.node.moduleReference) && inRange(path.node.moduleReference.expression, offset)) {
             isImportPkg = true;
+            path.stop();
           }
         }
       });
