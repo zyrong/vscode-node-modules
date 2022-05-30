@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.1](https://github.com/zyrong/vscode-node-modules/compare/v1.4.0...v1.4.1) (2022-05-30)
+
+
+### Bug Fixes
+
+* add support when the package.json is jsonc ([fccc4de](https://github.com/zyrong/vscode-node-modules/commit/fccc4deb45b23d7d3d27c1e9473fd9b1413dcfb4))
+
 ## [1.4.0](https://github.com/zyrong/vscode-node-modules/compare/v1.3.0...v1.4.0) (2022-05-15)
 
 
