@@ -10,6 +10,8 @@ import {
 } from "vscode";
 import { basename, dirname, join } from "path";
 import { existsSync } from "fs";
+import validate from 'validate-npm-package-name';
+import jsonParse from '@zyrong/json-parser';
 import {
   getFileInProjectRootDir,
   genFileLocation,
@@ -28,28 +30,33 @@ async function provideDefinition(
   const filepath = document.uri.fsPath;
   const fileName = basename(filepath);
   if (/package\.json$/.test(fileName)) {
-    const range = document.getWordRangeAtPosition(position);
-    const word = document.getText(range);
+    const wordRange = document.getWordRangeAtPosition(position);
+    if (!wordRange) { return; };
+    const word = document.getText(wordRange);
     const json = document.getText();
-    const offset = document.offsetAt(position);
     // const line = document.lineAt(position);
     // line.text // 光标行对应的那行文本内容
 
-    const depsOffsetRange = getDepsOffsetRange(json);
-    const pkgNameRegex = new RegExp(`${word}\\s*:`);
-    let isHoverPkgName = false;
-    for (const [key, value] of Object.entries(depsOffsetRange)) {
-      const [sIdx, eIdx] = value;
-      const depsText = json.slice(sIdx, eIdx);
-      if (offset >= sIdx && offset <= eIdx) { // check点击范围
-        if (pkgNameRegex.test(depsText)) { // check pkgName
-          isHoverPkgName = true;
-          break;
+    const pkgName = word.slice(1, -1);
+
+    if (!validate(pkgName).validForOldPackages) { return; };
+
+    try {
+      const visitor = jsonParse(json);
+      if (!visitor) { return; };
+      const isPkgName = ["peerDependencies", "dependencies", "devDependencies"].find(key => {
+        const node = visitor.get(key);
+        if (node && node.type === 'object') {
+          const valueRange = node.value.range;
+          if (valueRange.start < document.offsetAt(wordRange.start) && valueRange.end > document.offsetAt(wordRange.end)) {
+            return true;
+          }
         }
-      }
-    }
-    if (!isHoverPkgName) {
-      return;
+      });
+      if (!isPkgName) { return; };
+
+    } catch (err) {
+      console.error(error);
     }
 
     const rootDir = getFileInProjectRootDir(filepath);
@@ -58,7 +65,6 @@ async function provideDefinition(
       return;
     }
 
-    const pkgName = word.replace(/"\s*/g, "");
     const pkgPath = getPkgPath(pkgName, filepath, rootDir);
     if (!pkgPath) {
       window.showInformationMessage(t("tip.notFoundPackage"));

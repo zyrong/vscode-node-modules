@@ -568,6 +568,11 @@
     rimraf "^3.0.2"
     unzipper "^0.10.11"
 
+"@zyrong/json-parser@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.npmjs.org/@zyrong/json-parser/-/json-parser-0.1.1.tgz#4edf9c5347b72f01626feffee425e8287544a491"
+  integrity sha512-J407H3NNNNDPn27jspZHnfpXh7G9n4BiZtt0QkUDt9rmwg6rE4FjA8tBpiWN56KIbScWpEv1tuG5NZ//ehBc/Q==
+
 JSONStream@^1.0.4:
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/JSONStream/-/JSONStream-1.3.5.tgz#3208c1f08d3a4d99261ab64f92302bc15e111ca0"

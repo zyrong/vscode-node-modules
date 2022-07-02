@@ -202,6 +202,7 @@
     "@babel/parser": "^7.17.10",
     "@babel/traverse": "^7.17.10",
     "@babel/types": "^7.17.10",
+    "@zyrong/json-parser": "^0.1.1",
     "is-builtin-module": "^3.1.0",
     "validate-npm-package-name": "^4.0.0"
   }
