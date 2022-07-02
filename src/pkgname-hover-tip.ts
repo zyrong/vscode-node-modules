@@ -23,11 +23,11 @@ import { error, getFileInProjectRootDir, getPkgPath } from "./utils";
 import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
 import { readFile } from 'fs/promises';
-import * as isBuiltinModule from 'is-builtin-module';
-import * as validate from 'validate-npm-package-name';
+import isBuiltinModule from 'is-builtin-module';
+import validate from 'validate-npm-package-name';
 
 
-function inRange(range: { start: number | null, end: number | null }, val: number) {
+function inRange(range: { start?: number | null, end?: number | null }, val: number) {
   return range.start && range.end && val >= range.start && val <= range.end;
 }
 

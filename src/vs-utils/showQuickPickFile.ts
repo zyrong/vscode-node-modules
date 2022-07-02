@@ -1,5 +1,5 @@
-import * as path from "path";
-import * as fs from "fs/promises";
+import path from "path";
+import fs from "fs/promises";
 import { Disposable, QuickPickItem, Uri, window } from "vscode";
 import { isFile } from "./util";
 import t from "./i18n";
