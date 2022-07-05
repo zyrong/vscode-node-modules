@@ -558,20 +558,20 @@
   resolved "https://registry.yarnpkg.com/@ungap/promise-all-settled/-/promise-all-settled-1.1.2.tgz#aa58042711d6e3275dd37dc597e5d31e8c290a44"
   integrity sha512-sL/cEvJWAnClXw0wHk85/2L0G6Sj8UB0Ctc1TEMbKSsmpRosqhwj9gWgFRZSrBr2f9tiXISwNhCPmlfqUqyb9Q==
 
-"@vscode/test-electron@^1.6.2":
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/@vscode/test-electron/-/test-electron-1.6.2.tgz#f639cab19a0013949015079dcfd2ff0c1aa88a1b"
-  integrity sha512-W01ajJEMx6223Y7J5yaajGjVs1QfW3YGkkOJHVKfAMEqNB1ZHN9wCcViehv5ZwVSSJnjhu6lYEYgwBdHtCxqhQ==
+"@vscode/test-electron@^2.1.4":
+  version "2.1.5"
+  resolved "https://registry.npmjs.org/@vscode/test-electron/-/test-electron-2.1.5.tgz#ac98f8f445ea4590753f5fa0c7f6e4298f08c3b7"
+  integrity sha512-O/ioqFpV+RvKbRykX2ItYPnbcZ4Hk5V0rY4uhQjQTLhGL9WZUvS7exzuYQCCI+ilSqJpctvxq2llTfGXf9UnnA==
   dependencies:
     http-proxy-agent "^4.0.1"
     https-proxy-agent "^5.0.0"
     rimraf "^3.0.2"
     unzipper "^0.10.11"
 
-"@zyrong/json-parser@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.npmjs.org/@zyrong/json-parser/-/json-parser-0.1.1.tgz#4edf9c5347b72f01626feffee425e8287544a491"
-  integrity sha512-J407H3NNNNDPn27jspZHnfpXh7G9n4BiZtt0QkUDt9rmwg6rE4FjA8tBpiWN56KIbScWpEv1tuG5NZ//ehBc/Q==
+"@zyrong/json-parser@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.npmjs.org/@zyrong/json-parser/-/json-parser-0.2.1.tgz#b0d80c7f6b473e7f44c91504b1d4b13aedf183fe"
+  integrity sha512-W+nChwUdTrw6ovcaVszIupo8qxd/sdVoP+fItuyQCk9KOk4D4FVauP7dGCcU8ptqFdgnI8wM2iKQAgxnvHV6zQ==
 
 JSONStream@^1.0.4:
   version "1.3.5"

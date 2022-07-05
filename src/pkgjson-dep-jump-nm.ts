@@ -47,7 +47,7 @@ async function provideDefinition(
       const isPkgName = ["peerDependencies", "dependencies", "devDependencies"].find(key => {
         const node = visitor.get(key);
         if (node && node.type === 'object') {
-          const valueRange = node.value.range;
+          const valueRange = node.valueRange;
           if (valueRange.start < document.offsetAt(wordRange.start) && valueRange.end > document.offsetAt(wordRange.end)) {
             return true;
           }
