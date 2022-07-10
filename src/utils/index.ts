@@ -117,3 +117,7 @@ export const error = (function () {
     // console.error(`[node_modules extension]: ${msg}. \n${err}`);
   };
 })();
+
+export function isRecord(target: any): target is Record<string, any> {
+  return target !== null && typeof target === 'object';
+}

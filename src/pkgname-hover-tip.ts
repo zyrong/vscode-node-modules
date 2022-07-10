@@ -14,12 +14,13 @@ import {
   Uri,
   env,
   CancellationTokenSource,
-  workspace
+  workspace,
+  Range
 } from "vscode";
 import { parse, ParserOptions } from '@babel/parser';
 import traverse from "@babel/traverse";
 import { isIdentifier, isImport, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
-import { error, getFileInProjectRootDir, getPkgPath } from "./utils";
+import { error, getFileInProjectRootDir, getPkgPath, isRecord } from "./utils";
 import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
 import { readFile } from 'fs/promises';
@@ -32,7 +33,7 @@ function inRange(range: { start?: number | null, end?: number | null }, val: num
 }
 
 const URL_Regex = /https?:\/\/.*/i;
-function matchUrl(str: string) {
+function extractUrl(str: any) {
   if (typeof str !== 'string') { return ''; };
   const match = str.match(URL_Regex);
   if (match) {
@@ -64,7 +65,22 @@ function findQuota(text: string, eachNum: number, start: number, step: number) {
   }
   return quotaIdx;
 }
-class HoverTip implements HoverProvider {
+
+function getLineTextQuotaBetweenString(document: TextDocument, position: Position, range: Range) {
+  const textLine = document.lineAt(position.line);
+  const hoverRowText = textLine.text;
+
+  const leftQuotaIndex = findQuota(hoverRowText, range.start.character + 1, range.start.character, -1);
+  if (leftQuotaIndex === -1) { return; };
+  const rightQuotaIndex = findQuota(hoverRowText, hoverRowText.length - range.end.character, range.end.character, 1);
+  if (rightQuotaIndex === -1) { return; };
+
+  return hoverRowText.slice(leftQuotaIndex + 1, rightQuotaIndex);
+}
+
+
+
+export class HoverTip implements HoverProvider {
   provideHover(
     document: TextDocument,
     position: Position,
@@ -75,18 +91,10 @@ class HoverTip implements HoverProvider {
     const hoverWord = document.getText(range);
     if (!hoverWord) { return; };
 
-    const textLine = document.lineAt(position.line);
-    const hoverRowText = textLine.text;
-
-    const leftQuotaIndex = findQuota(hoverRowText, range.start.character + 1, range.start.character, -1);
-    if (leftQuotaIndex === -1) { return; };
-    const rightQuotaIndex = findQuota(hoverRowText, hoverRowText.length - range.end.character, range.end.character, 1);
-    if (rightQuotaIndex === -1) { return; };
-
-    const fullPkgPath = hoverRowText.slice(leftQuotaIndex + 1, rightQuotaIndex);
+    const fullPkgPath = getLineTextQuotaBetweenString(document, position, range);
 
     // 排除相对路径
-    if (fullPkgPath[0] === '.') { return; };
+    if (!fullPkgPath || fullPkgPath[0] === '.') { return; };
 
     const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/);
     if (!pkgNameMatch) { error('pkgname match error'); return; }
@@ -217,21 +225,37 @@ class HoverTip implements HoverProvider {
         if (pkgPath) {
           const pkgJsonBuffer = await readFile(join(pkgPath, PACKAGE_JSON));
           const pkgJson = JSON.parse(pkgJsonBuffer.toString());
+          if (isRecord(pkgJson)) {
+            homepageUrl = extractUrl(pkgJson.homepage);
 
-          if (pkgJson.homepage) {
-            homepageUrl = matchUrl(pkgJson.homepage);
-          }
-          if (pkgJson.repository && pkgJson.repository.url) {
-            repositoryUrl = matchUrl(pkgJson.repository.url);
-          }
-          if (!repositoryUrl && pkgJson.bugs && pkgJson.bugs.url) {
-            let url = matchUrl(pkgJson.bugs.url);
-            const idx = url.indexOf('/issues');
-            if (idx !== -1) {
-              url = url.slice(0, idx);
+            if (typeof pkgJson.repository === 'string') {
+              repositoryUrl = pkgJson.repository;
+            } else if (isRecord(pkgJson.repository) && typeof pkgJson.repository.url === 'string') {
+              repositoryUrl = pkgJson.repository.url;
             }
-            repositoryUrl = url;
+            if (repositoryUrl) {
+              const matchResult = extractUrl(repositoryUrl);
+              if (matchResult) {
+                repositoryUrl = matchResult;
+              } else {
+                repositoryUrl = 'https://github.com/' + repositoryUrl.replace(/^(\s|\/)*/, '');
+              }
+            }else{
+              let bugsUrl = '';
+              if (typeof pkgJson.bugs === 'string') {
+                bugsUrl = pkgJson.bugs;
+              } else if (isRecord(pkgJson.bugs) && typeof pkgJson.bugs.url === 'string') {
+                bugsUrl = pkgJson.bugs.url;
+              }
+              let url = extractUrl(bugsUrl);
+              const idx = url.indexOf('/issues');
+              if (idx !== -1) {
+                url = url.slice(0, idx);
+              }
+              repositoryUrl = url;
+            }
           }
+
         } else {
           // 该包可能未安装
         }
