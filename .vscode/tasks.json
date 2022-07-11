@@ -13,7 +13,7 @@
 			},
 			"group": {
 				"kind": "build",
-				"isDefault": true
+				"isDefault": true // 标记为默认任务
 			}
 		}
 	]

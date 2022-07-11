@@ -10,18 +10,20 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
+        "--disable-extensions", // 禁用除当前正在测试插件以外的其他插件
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			"preLaunchTask": "${defaultBuildTask}" // 调试会话启动前要运行的任务, ${defaultBuildTask}指向.vscode/tasks.json中配置的默认任务
 		},
 		{
 			"name": "Extension Tests",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
+        "${workspaceFolder}/src/test/fixtures/base", // 指定workspace要打开的目录
         "--disable-extensions", // 禁用除当前正在测试插件以外的其他插件
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"

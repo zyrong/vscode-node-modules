@@ -1,38 +1,57 @@
-import * as path from 'path';
-import * as Mocha from 'mocha';
-import * as glob from 'glob';
+import path from 'path';
+import Mocha from 'mocha';
+import glob from 'glob';
+import { exec as exec_, ExecOptions, execFile } from 'child_process';
+import { promisify } from 'util';
+const exec = promisify(exec_);
+import { workspace } from 'vscode';
+import { getWorkSpacePath } from './util';
 
-export function run(): Promise<void> {
-	// Create the mocha test
-	const mocha = new Mocha({
-		ui: 'tdd',
-		color: true
-	});
 
-	const testsRoot = path.resolve(__dirname, '..');
+export async function run(): Promise<void> {
+  const WorkspacePath = getWorkSpacePath();
 
-	return new Promise((c, e) => {
-		glob('**/**.test.js', { cwd: testsRoot }, (err, files) => {
-			if (err) {
-				return e(err);
-			}
+  await exec('npm i', { cwd: WorkspacePath });
 
-			// Add files to the test suite
-			files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+  // Create the mocha test
+  const mocha = new Mocha({
+    ui: 'tdd',
+    color: true,
+    // rootHooks: {
+    //   beforeAll: function () {
+    //     chaiJestSnapshot.resetSnapshotRegistry();
+    //   },
+    //   beforeEach: function (this: Mocha.Context) {
+    //     chaiJestSnapshot.configureUsingMochaContext(this);
+    //   },
+    // }
+  });
 
-			try {
-				// Run the mocha test
-				mocha.run(failures => {
-					if (failures > 0) {
-						e(new Error(`${failures} tests failed.`));
-					} else {
-						c();
-					}
-				});
-			} catch (err) {
-				console.error(err);
-				e(err);
-			}
-		});
-	});
+  const testsRoot = path.resolve(__dirname, '..');
+
+  return new Promise((c, e) => {
+    glob('**/**.test.js', { cwd: testsRoot }, (err, files) => {
+      if (err) {
+        return e(err);
+      }
+
+      // Add files to the test suite
+      files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+
+      try {
+        mocha.timeout('10s');
+        // Run the mocha test
+        mocha.run(failures => {
+          if (failures > 0) {
+            e(new Error(`${failures} tests failed.`));
+          } else {
+            c();
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        e(err);
+      }
+    });
+  });
 }
