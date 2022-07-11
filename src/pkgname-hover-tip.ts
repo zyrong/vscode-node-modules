@@ -263,13 +263,13 @@ export class HoverTip implements HoverProvider {
 
       // command uri: https://liiked.github.io/VS-Code-Extension-Doc-ZH/#/extension-guides/command?id=%e5%91%bd%e4%bb%a4%e7%9a%84urls
       markdown = `<span style="color:#569CD6;">${pkgName}</span>${getSpaceString(2)}`;
+      markdown += `[NPM](https://www.npmjs.com/package/${pkgName})`;
       if (homepageUrl) {
         markdown += `[HomePage](${homepageUrl})${getSpaceString(4)}`;
       }
       if (repositoryUrl) {
         markdown += `[Repository](${repositoryUrl})${getSpaceString(4)}`;
       }
-      markdown += `[NPM](https://www.npmjs.com/package/${pkgName})`;
 
       const contents = new MarkdownString(markdown);
       contents.isTrusted = true;
