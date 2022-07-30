@@ -20,7 +20,9 @@ import {
 import { parse, ParserOptions } from '@babel/parser';
 import traverse from "@babel/traverse";
 import { isIdentifier, isImport, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
-import { error, getFileInProjectRootDir, getPkgPath, isRecord } from "./utils";
+import { error, isRecord } from "./utils";
+import { getFileInProjectRootDir, } from './vs-utils';
+import { findPkgPath } from './utils/pkg';
 import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
 import { readFile } from 'fs/promises';
@@ -221,7 +223,7 @@ export class HoverTip implements HoverProvider {
         homepageUrl = `https://nodejs.org/${env.language}/`;
         repositoryUrl = 'https://github.com/nodejs/node';
       } else {
-        const pkgPath = getPkgPath(pkgName, document.uri.path, rootDir);
+        const pkgPath = findPkgPath(pkgName, document.uri.path, rootDir);
         if (pkgPath) {
           const pkgJsonBuffer = await readFile(join(pkgPath, PACKAGE_JSON));
           const pkgJson = JSON.parse(pkgJsonBuffer.toString());

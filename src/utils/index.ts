@@ -1,9 +1,8 @@
 import { workspace, Location, Uri, Position, window } from "vscode";
 import { existsSync, readFileSync, statSync } from "fs";
-import { dirname, join } from "path";
-import { NODE_MODULES, PACKAGE_JSON } from "../types";
 
-export function isFile(path: string): Boolean {
+
+export function isFileSync(path: string): Boolean {
   try {
     const _stat = statSync(path);
     return _stat.isFile();
@@ -11,94 +10,20 @@ export function isFile(path: string): Boolean {
     return false;
   }
 }
-
-export function existFile(path: string): Boolean {
+export function isDirectorySync(path: string): Boolean {
   try {
-    return existsSync(path);
+    const _stat = statSync(path);
+    return _stat.isDirectory();
   } catch (error) {
     return false;
   }
 }
 
-// 获取文件所在工作空间的根目录
-export const getFileInProjectRootDir = function (
-  filepath: string
-): string | undefined {
-  const project = workspace.workspaceFolders?.find((project) => {
-    return filepath.startsWith(project.uri.path);
-  });
-  return project?.uri.path;
-};
-
-type DepsOffsetRange = {
-  peerDependencies?: number[]
-  dependencies?: number[]
-  devDependencies?: number[]
-};
-// 获取deps字符范围
-export const getDepsOffsetRange = function (
-  packageJson: string
-): DepsOffsetRange {
-  // match deps range string
-  // /(?<="(?:peerDependencies|dependencies|devDependencies)"[^\{]*?\{)[^\}]*([\s\S]*?)[^\}]*/g
-  const regex = /"(peerDependencies|dependencies|devDependencies)"\s*:\s*\{/g;
-  const result: DepsOffsetRange = {};
-  for (let i = 0; i < 3; i++) {
-    const match = regex.exec(packageJson);
-    if (!match) {
-      continue;
-    }
-
-    const startIdx = match.index + match[0].length;
-    const endIdx = packageJson.indexOf("}", startIdx);
-    const key = match[1];
-    result[(key as keyof DepsOffsetRange)] = [startIdx, endIdx];
-    regex.lastIndex = endIdx;
-  }
-  return result;
-};
-
-// 判断是否是monorepo项目
-export const isMonorepoProject = (projectRootDir: string) => {
-  // TODO: 暂时先这么判断
-  const lernaJsonPath = join(projectRootDir, "lerna.json");
-  let isLerna = existsSync(lernaJsonPath);
-  let yarnworkspaces = false;
-  const pkgjsonPath = join(projectRootDir, "package.json");
-  if (existsSync(pkgjsonPath)) {
-    const pkgBuffer = readFileSync(pkgjsonPath);
-    try {
-      const pkgJson = JSON.parse(pkgBuffer.toString());
-      yarnworkspaces = Boolean(pkgJson.workspaces);
-    } catch (err) {
-      error("root package.json parse error", err);
-    }
-  }
-  return isLerna || yarnworkspaces;
-};
-
-export function getPkgPath(pkgName: string, startPath: string, endPath: string){
-  let destPath: string = "";
-  const isOrganizePkg = pkgName.startsWith("@");
-  const pkgNamePath = isOrganizePkg ? pkgName.split("/") : [pkgName];
-  // 从package.json所在目录的node_modules寻找，直到根目录的node_modules停止。
-  let end = false;
-  let currentDirPath = startPath;
-  do {
-    currentDirPath = dirname(currentDirPath);
-    destPath = join(
-      currentDirPath,
-      NODE_MODULES,
-      ...pkgNamePath,
-      PACKAGE_JSON
-    );
-    if (existsSync(destPath)) {
-      return dirname(destPath);
-    }
-    end = endPath === currentDirPath;
-  } while (!end);
-  return undefined;
+export function trimRightBackslash(str: string) {
+  return str.replace(/\/*$/, '');
 }
+
+
 
 // 生成 vscode.location对象 用来让vscode跳转到指定文件的指定位置
 export const genFileLocation = (

@@ -1,5 +1,5 @@
 import { env } from "vscode";
-import { error } from "../util";
+import { error } from "../error";
 
 // format('星期{0}{1}', ['一','晚上']) => 星期一晚上
 function format(message: string, args: string[] = []): string {

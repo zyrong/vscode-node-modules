@@ -1,7 +1,8 @@
 import { window, workspace, Uri } from "vscode";
 import { stat, readdir, access } from "fs/promises";
 import { basename, join } from "path";
-import { getFileInProjectRootDir, error } from "./utils";
+import { error } from "./utils";
+import { getFileInProjectRootDir, } from './vs-utils';
 import t from "./utils/localize";
 import { NODE_MODULES, PACKAGE_JSON } from "./types";
 import showPickWorkspaceFolder from "./vs-utils/showPickWorkspaceFolder";
