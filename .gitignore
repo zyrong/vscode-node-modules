@@ -5,5 +5,4 @@ node_modules
 *.vsix
 note.md
 yarn-error.log
-src/test/fixtures/**/.vscode
-src/test/fixtures/**/node_modules
+!src/test/fixtures/**/node_modules

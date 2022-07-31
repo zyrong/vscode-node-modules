@@ -23,10 +23,10 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-        "${workspaceFolder}/src/test/fixtures/base", // 指定workspace要打开的目录
+        "${workspaceFolder}/src/test/fixtures/pkgjson-dep-jump-nm", // 指定workspace要打开的目录
         "--disable-extensions", // 禁用除当前正在测试插件以外的其他插件
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/test/suite/pkgjson-dep-jump-nm/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/test/**/*.js"

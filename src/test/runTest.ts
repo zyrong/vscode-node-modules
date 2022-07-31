@@ -8,12 +8,12 @@ async function main() {
     // Passed to `--extensionDevelopmentPath`
     const extensionDevelopmentPath = path.resolve(__dirname, '../../');
 
+    const fixturesDir = path.resolve(extensionDevelopmentPath, './src/test/fixtures');
+
     // The path to test runner
     // Passed to --extensionTestsPath
-    const extensionTestsPath = path.resolve(__dirname, './suite/index');
-
-    const fixturesDir = path.resolve(extensionDevelopmentPath, './src/test/fixtures');
-    const testWorkspace = path.resolve(fixturesDir, './base');
+    const extensionTestsPath = path.resolve(__dirname, './suite/pkgjson-dep-jump-nm/index');
+    const testWorkspace = path.resolve(fixturesDir, './pkgjson-dep-jump-nm');
 
     // Download VS Code, unzip it and run the integration test
     await runTests({
