@@ -129,9 +129,9 @@ suite('pkgjson-dep-jump-nm package.json Test', function () {
 
 
 
-  test("base Jump", async function () {
+  test("basic Jump", async function () {
     await initVisitor();
-    const pkgName = 'base-test';
+    const pkgName = 'basic-test';
     const needTestFieldNames = ["dependencies", "devDependencies", "peerDependencies", "bundleDependencies", "optionalDependencies", "resolutions", "overrides", "dependenciesMeta", "peerDependenciesMeta"];
     const testKeyPathList = needTestFieldNames.map(name => {
       return name + '.' + pkgName;
@@ -201,39 +201,39 @@ suite('pkgjson-dep-jump-nm package-lock.json Test', function () {
   }
 
   [
-    ['packages', '', 'dependencies', 'base-test'],
+    ['packages', '', 'dependencies', 'basic-test'],
     ['packages', '', 'devDependencies', '@scope/test'],
     ['packages', 'node_modules/@scope/test'],
-    ['packages', 'node_modules/base-test'],
+    ['packages', 'node_modules/basic-test'],
     ['packages', 'node_modules/a-1'],
-    ['packages', 'node_modules/a-1', "dependencies", "base-test"],
-    ['dependencies', 'base-test'],
-    ['dependencies', 'base-test', "requires", "a-1"],
+    ['packages', 'node_modules/a-1', "dependencies", "basic-test"],
+    ['dependencies', 'basic-test'],
+    ['dependencies', 'basic-test', "requires", "a-1"],
     ['dependencies', '@scope/test'],
 
     ['packages', 'node_modules/@scope/test', 'dependencies', 'b-1'], // b-1
     ['packages', 'node_modules/a-1', "dependencies", "b-1"],// a-1/b-1
     ['packages', 'node_modules/a-1/node_modules/b-1'],// a-1/b-1
-    ['packages', 'node_modules/a-1/node_modules/b-1', "dependencies", "base-test"],
+    ['packages', 'node_modules/a-1/node_modules/b-1', "dependencies", "basic-test"],
     ['dependencies', '@scope/test', "dependencies", 'b-1'], // b-1
     ['dependencies', 'a-1', 'dependencies', 'b-1'], // a-1/b-1
-    ['dependencies', 'a-1', 'dependencies', 'b-1', "requires", 'base-test']
+    ['dependencies', 'a-1', 'dependencies', 'b-1', "requires", 'basic-test']
   ];
   // 测试案例分为 校验规则: jump（可以指定路径，默认可以不指定），jump打不开
   // deep Jump
 
 
-  test('base jump', async () => {
+  test('basic jump', async () => {
     await initVisitor();
     const testCases = [
-      ['packages', '', 'dependencies', 'base-test'],
+      ['packages', '', 'dependencies', 'basic-test'],
       ['packages', '', 'devDependencies', '@scope/test'],
       ['packages', 'node_modules/@scope/test'],
-      ['packages', 'node_modules/base-test'],
+      ['packages', 'node_modules/basic-test'],
       ['packages', 'node_modules/a-1'],
-      ['packages', 'node_modules/a-1', "dependencies", "base-test"],
-      ['dependencies', 'base-test'],
-      ['dependencies', 'base-test', "requires", "a-1"],
+      ['packages', 'node_modules/a-1', "dependencies", "basic-test"],
+      ['dependencies', 'basic-test'],
+      ['dependencies', 'basic-test', "requires", "a-1"],
       ['dependencies', '@scope/test'],
     ];
     await testCases.reduce((chain, keyPath) => {
@@ -249,10 +249,10 @@ suite('pkgjson-dep-jump-nm package-lock.json Test', function () {
       [['packages', 'node_modules/@scope/test', 'dependencies', 'b-1'], 'b-1'],
       [['packages', 'node_modules/a-1', "dependencies", "b-1"], 'a-1/node_modules/b-1'],
       [['packages', 'node_modules/a-1/node_modules/b-1'], 'a-1/node_modules/b-1',],
-      [['packages', 'node_modules/a-1/node_modules/b-1', "dependencies", "base-test"], 'base-test'],
+      [['packages', 'node_modules/a-1/node_modules/b-1', "dependencies", "basic-test"], 'basic-test'],
       [['dependencies', '@scope/test', "dependencies", 'b-1'], 'b-1'],
       [['dependencies', 'a-1', 'dependencies', 'b-1'], 'a-1/node_modules/b-1'],
-      [['dependencies', 'a-1', 'dependencies', 'b-1', "requires", 'base-test'], 'base-test']
+      [['dependencies', 'a-1', 'dependencies', 'b-1', "requires", 'basic-test'], 'basic-test']
     ];
     await testCases.reduce((chain, item) => {
       return chain.then(() => {
@@ -281,7 +281,7 @@ suite('pkgjson-dep-jump-nm package-lock.json Test', function () {
     await initVisitor();
     const testCases = [
       ['packages', '', "dependencies", 'not-install'],
-      ['dependencies', 'base-test', 'requires', 'not-install'],
+      ['dependencies', 'basic-test', 'requires', 'not-install'],
     ];
 
     await testCases.reduce((chain, keyPath) => {
@@ -323,13 +323,13 @@ suite('pkgjson-dep-jump-nm .package-lock.json Test', function () {
 
 
 
-  test('base jump', async () => {
+  test('basic jump', async () => {
     await initVisitor();
     const testCases = [
       ['packages', 'node_modules/@scope/test'],
-      ['packages', 'node_modules/base-test'],
+      ['packages', 'node_modules/basic-test'],
       ['packages', 'node_modules/a-1'],
-      ['packages', 'node_modules/a-1', "dependencies", "base-test"],
+      ['packages', 'node_modules/a-1', "dependencies", "basic-test"],
     ];
     await testCases.reduce((chain, keyPath) => {
       return chain.then(() => {
@@ -344,7 +344,7 @@ suite('pkgjson-dep-jump-nm .package-lock.json Test', function () {
       [['packages', 'node_modules/@scope/test', 'dependencies', 'b-1'], 'b-1'],
       [['packages', 'node_modules/a-1', "dependencies", "b-1"], 'a-1/node_modules/b-1'],
       [['packages', 'node_modules/a-1/node_modules/b-1'], 'a-1/node_modules/b-1',],
-      [['packages', 'node_modules/a-1/node_modules/b-1', "dependencies", "base-test"], 'base-test'],
+      [['packages', 'node_modules/a-1/node_modules/b-1', "dependencies", "basic-test"], 'basic-test'],
     ];
     await testCases.reduce((chain, item) => {
       return chain.then(() => {

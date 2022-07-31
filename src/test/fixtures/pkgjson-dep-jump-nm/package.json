@@ -4,38 +4,38 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "base-test": "^4.17.21",
+    "basic-test": "^4.17.21",
     "@scope/test": "^4.14.182",
     "not-install": "1.0.0"
   },
   "devDependencies": {
-    "base-test": "^4.17.21"
+    "basic-test": "^4.17.21"
   },
   "peerDependencies": {
-    "base-test": "^4.17.21"
+    "basic-test": "^4.17.21"
   },
   "bundledDependencies": [
-    "base-test"
+    "basic-test"
   ],
   "bundleDependencies": {
-    "base-test": true
+    "basic-test": true
   },
   "optionalDependencies": {
-    "base-test": "^4.17.21"
+    "basic-test": "^4.17.21"
   },
   "resolutions": {
-    "base-test": "^4.17.21"
+    "basic-test": "^4.17.21"
   },
   "overrides": {
-    "base-test": "^4.17.21"
+    "basic-test": "^4.17.21"
   },
   "dependenciesMeta": {
-    "base-test": {
+    "basic-test": {
       "optional": true
     }
   },
   "peerDependenciesMeta": {
-    "base-test": {
+    "basic-test": {
       "optional": true
     }
   }
