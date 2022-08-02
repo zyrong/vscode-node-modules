@@ -167,8 +167,10 @@
 		"@babel/types": "^7.17.10",
 		"@zyrong/json-parser": "0.4.0",
 		"crypto-js": "^4.1.1",
-		"got": "^12.1.0",
+		"got": "^11.8.2",
+		"hosted-git-info": "^5.0.0",
 		"is-builtin-module": "^3.1.0",
+		"pacote": "^13.6.1",
 		"validate-npm-package-name": "^4.0.0",
 		"yaml": "^2.1.1"
 	},
@@ -180,8 +182,10 @@
 		"@types/chai-jest-snapshot": "^1.3.6",
 		"@types/crypto-js": "^4.1.1",
 		"@types/glob": "^7.1.4",
+		"@types/hosted-git-info": "^3.0.2",
 		"@types/mocha": "^9.0.0",
 		"@types/node": "14.x",
+		"@types/pacote": "^11.1.5",
 		"@types/rimraf": "^3.0.2",
 		"@types/sinon": "^10.0.12",
 		"@types/validate-npm-package-name": "^3.0.3",
@@ -218,5 +222,11 @@
 		"type": "git",
 		"url": "https://github.com/zyrong/vscode-node-modules"
 	},
-	"homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md"
+	"homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md",
+	"__metadata": {
+		"id": "a6541359-bd98-42b1-8e17-271427e5983b",
+		"publisherDisplayName": "zyrong",
+		"publisherId": "c70ef477-23eb-4db9-8ab8-5585b5192fd4",
+		"isPreReleaseVersion": false
+	}
 }

@@ -20,29 +20,23 @@ import {
 import { parse, ParserOptions } from '@babel/parser';
 import traverse from "@babel/traverse";
 import { isIdentifier, isImport, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
-import { error, isRecord } from "./utils";
-import { getFileInProjectRootDir, } from './vs-utils';
-import { findPkgPath } from './utils/pkg';
+import { error, isRecord, trimLeftSlash } from "./utils";
+import { getFileInProjectRootDir, parseJsonFile } from './vs-utils';
+import { findPkgPath, getPkgJsonInfo, PackageInfo, getPackageInfo } from './utils/pkg';
 import { dirname, join } from "path";
 import { PACKAGE_JSON } from "./types";
 import { readFile } from 'fs/promises';
 import isBuiltinModule from 'is-builtin-module';
 import validate from 'validate-npm-package-name';
+import hostedGitInfo from 'hosted-git-info';
+import { forMatSize } from "./vs-utils/util";
+
 
 
 function inRange(range: { start?: number | null, end?: number | null }, val: number) {
   return range.start && range.end && val >= range.start && val <= range.end;
 }
 
-const URL_Regex = /https?:\/\/.*/i;
-function extractUrl(str: any) {
-  if (typeof str !== 'string') { return ''; };
-  const match = str.match(URL_Regex);
-  if (match) {
-    return match[0];
-  }
-  return '';
-}
 
 function getSpaceString(num: number) {
   let result = '';
@@ -217,67 +211,108 @@ export class HoverTip implements HoverProvider {
     }
 
     return new Promise(async (resolve, reject) => {
-      let markdown,
-        homepageUrl = '', repositoryUrl = '';
-      if (isBuiltinModule(pkgName)) {
-        homepageUrl = `https://nodejs.org/${env.language}/`;
-        repositoryUrl = 'https://github.com/nodejs/node';
+      const isNodeBuiltinModule = isBuiltinModule(pkgName);
+      let contents: MarkdownString | undefined;
+      if (isNodeBuiltinModule) {
+        contents = (this.generateTipMarkdown(pkgName, true));
       } else {
+        let pkgJsonPath: string | undefined;
         const pkgPath = findPkgPath(pkgName, document.uri.path, rootDir);
-        if (pkgPath) {
-          const pkgJsonBuffer = await readFile(join(pkgPath, PACKAGE_JSON));
-          const pkgJson = JSON.parse(pkgJsonBuffer.toString());
-          if (isRecord(pkgJson)) {
-            homepageUrl = extractUrl(pkgJson.homepage);
-
-            if (typeof pkgJson.repository === 'string') {
-              repositoryUrl = pkgJson.repository;
-            } else if (isRecord(pkgJson.repository) && typeof pkgJson.repository.url === 'string') {
-              repositoryUrl = pkgJson.repository.url;
-            }
-            if (repositoryUrl) {
-              const matchResult = extractUrl(repositoryUrl);
-              if (matchResult) {
-                repositoryUrl = matchResult;
-              } else {
-                repositoryUrl = 'https://github.com/' + repositoryUrl.replace(/^(\s|\/)*/, '');
-              }
-            }else{
-              let bugsUrl = '';
-              if (typeof pkgJson.bugs === 'string') {
-                bugsUrl = pkgJson.bugs;
-              } else if (isRecord(pkgJson.bugs) && typeof pkgJson.bugs.url === 'string') {
-                bugsUrl = pkgJson.bugs.url;
-              }
-              let url = extractUrl(bugsUrl);
-              const idx = url.indexOf('/issues');
-              if (idx !== -1) {
-                url = url.slice(0, idx);
-              }
-              repositoryUrl = url;
-            }
+        pkgPath && (pkgJsonPath = join(pkgPath, PACKAGE_JSON));
+        const pkgJson = await (!token.isCancellationRequested && getPkgJsonInfo(pkgName, pkgJsonPath, rootDir));
+        if (pkgJson) {
+          const pkgInfo = await (!token.isCancellationRequested && getPackageInfo(pkgJson));
+          if (pkgInfo) {
+            contents = this.generateTipMarkdown(pkgName, pkgInfo, pkgJsonPath);
           }
-
-        } else {
-          // 该包可能未安装
         }
       }
-
-      // command uri: https://liiked.github.io/VS-Code-Extension-Doc-ZH/#/extension-guides/command?id=%e5%91%bd%e4%bb%a4%e7%9a%84urls
-      markdown = `<span style="color:#569CD6;">${pkgName}</span>${getSpaceString(2)}`;
-      markdown += `[NPM](https://www.npmjs.com/package/${pkgName})`;
-      if (homepageUrl) {
-        markdown += `[HomePage](${homepageUrl})${getSpaceString(4)}`;
-      }
-      if (repositoryUrl) {
-        markdown += `[Repository](${repositoryUrl})${getSpaceString(4)}`;
-      }
-
-      const contents = new MarkdownString(markdown);
-      contents.isTrusted = true;
-      contents.supportHtml = true;
-      resolve(new Hover(contents));
+      contents ? resolve(new Hover(contents)) : reject();
     });
+  }
+
+  generateTipMarkdown(pkgName: string, isNodeBuiltinModule: true): MarkdownString;
+  generateTipMarkdown(pkgName: string, packageInfo: PackageInfo, pkgJsonPath: string | undefined): MarkdownString;
+  generateTipMarkdown(pkgName: string, arg: true | PackageInfo, pkgJsonPath?: string | undefined): MarkdownString {
+    let isNodeBuiltinModule = false;
+    let markdown = '',
+      homepageUrl: string | undefined, repositoryUrl: string | undefined, pkgVersion = '', sizeInfo = '';
+    if (typeof arg === 'boolean') {
+      homepageUrl = `https://nodejs.org/${env.language}/`;
+      repositoryUrl = 'https://github.com/nodejs/node';
+      isNodeBuiltinModule = true;
+    } else {
+      const packageInfo = arg;
+      pkgVersion = packageInfo.version;
+      homepageUrl = packageInfo.homepageUrl;
+      repositoryUrl = packageInfo.repositoryUrl;
+
+      function extractGitUrl(url: string) {
+        let result: string | undefined;
+        if (/^https?:\/\/.*/i.test(url)) {
+          result = url;
+        } else {
+          const gitInfo = hostedGitInfo.fromUrl(trimLeftSlash(url));
+          if (gitInfo) {
+            result = gitInfo.https({ noGitPlus: true, noCommittish: true });
+          }
+        }
+        if (result && /\.git$/.test(result)) {
+          result = result.slice(0, -4);
+        }
+        return result;
+      }
+
+
+      if (repositoryUrl) {
+        repositoryUrl = extractGitUrl(repositoryUrl);
+      }
+      if (!repositoryUrl && packageInfo.bugsUrl) {
+        let bugsUrl = packageInfo.bugsUrl;
+        const idx = bugsUrl.indexOf('/issues');
+        if (idx !== -1) {
+          bugsUrl = bugsUrl.slice(0, idx);
+        }
+        repositoryUrl = extractGitUrl(bugsUrl);
+      }
+
+      if (repositoryUrl === homepageUrl) {
+        homepageUrl = undefined;
+      }
+
+      if (packageInfo.webpackBundleSize) {
+        sizeInfo = `BundleSize:${getSpaceString(3)}${forMatSize(packageInfo.webpackBundleSize.normal)}${getSpaceString(3)}(gzip:${getSpaceString(1)}${forMatSize(packageInfo.webpackBundleSize.gzip)})`;
+      }
+    }
+
+    let pkgnameMarkdown = '';
+    if (isNodeBuiltinModule) {
+      pkgnameMarkdown = `\`${pkgName}\``;
+    } else {
+      pkgnameMarkdown = `\`${pkgName}${pkgVersion ? '@' + pkgVersion : ''}\``;
+      if (pkgJsonPath) {
+        // command uri: https://liiked.github.io/VS-Code-Extension-Doc-ZH/#/extension-guides/command?id=%e5%91%bd%e4%bb%a4%e7%9a%84urls
+        const showTextDocumentCmdUri = Uri.parse(`command:extension.show.textDocument?${encodeURIComponent(`"${pkgJsonPath}"`)}`);
+        pkgnameMarkdown = `[${pkgnameMarkdown}](${showTextDocumentCmdUri})`;
+      }
+    }
+    markdown += `<span style="color:#569CD6;">${pkgnameMarkdown}</span>${getSpaceString(2)}`;
+    if (!isNodeBuiltinModule) {
+      markdown += `[NPM](https://www.npmjs.com/package/${pkgName}${pkgVersion ? '/v/' + pkgVersion : ''})${getSpaceString(4)}`;
+    }
+    if (homepageUrl) {
+      markdown += `[HomePage](${homepageUrl})${getSpaceString(4)}`;
+    }
+    if (repositoryUrl) {
+      markdown += `[Repository](${repositoryUrl})${getSpaceString(4)}`;
+    }
+    if (sizeInfo) {
+      markdown += `<br/>${sizeInfo}`;
+    }
+    const contents = new MarkdownString(markdown);
+    contents.isTrusted = true;
+    contents.supportHtml = true;
+    return contents;
   }
 }
 

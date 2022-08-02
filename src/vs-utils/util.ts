@@ -40,10 +40,21 @@ export function getFileInProjectRootDir(
 
 export async function parseJsonFile(jsonPath: string): Promise<Record<string, any> | undefined> {
   try {
-    const jsonBuffer = readFile(jsonPath);
+    const jsonBuffer = await readFile(jsonPath);
     if (jsonBuffer) {
       return JSON.parse(jsonBuffer.toString());
     }
   } catch (err) {
+    console.error(err);
   }
+}
+
+export function forMatSize(byteSize: number, decimal = 2): string {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  for (; i < units.length; i++) {
+    if (byteSize < 1024) {break;};
+    byteSize /= 1024;
+  }
+  return byteSize.toFixed(decimal) + units[i];
 }

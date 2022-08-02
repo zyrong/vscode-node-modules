@@ -19,11 +19,13 @@ export function isDirectorySync(path: string): Boolean {
   }
 }
 
-export function trimRightBackslash(str: string) {
+export function trimRightSlash(str: string) {
   return str.replace(/\/*$/, '');
 }
 
-
+export function trimLeftSlash(str: string) {
+  return str.replace(/\/*$/, '');
+}
 
 // 生成 vscode.location对象 用来让vscode跳转到指定文件的指定位置
 export const genFileLocation = (
@@ -45,4 +47,19 @@ export const error = (function () {
 
 export function isRecord(target: any): target is Record<string, any> {
   return target !== null && typeof target === 'object';
+}
+
+export function requestDebounce<T extends any[], R,>(fn: (...args: T) => Promise<R>, getKey: (...args: any[]) => any) {
+  const promises = new Map();
+  return function (...args: T): Promise<R> {
+    const key = getKey(...args);
+    if (!promises.has(key)) {
+      const promise = fn(...args);
+      promises.set(key, promise);
+      promise.finally(() => {
+        promises.delete(key);
+      });
+    }
+    return promises.get(key)!;
+  };
 }
