@@ -171,8 +171,7 @@
 		"hosted-git-info": "^5.0.0",
 		"is-builtin-module": "^3.2.0",
 		"pacote": "^13.6.1",
-		"validate-npm-package-name": "^4.0.0",
-		"yaml": "^2.1.1"
+		"validate-npm-package-name": "^4.0.0"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^15.0.0",
