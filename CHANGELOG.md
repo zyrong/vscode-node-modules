@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/zyrong/vscode-node-modules/compare/v1.4.2...v1.5.0) (2022-08-02)
+
+
+### Features
+
+* package-lock.json and package.json new feature ([c23b721](https://github.com/zyrong/vscode-node-modules/commit/c23b721ea16c8b113d28e5f84d95461c5b7f3746))
+* update hover tip feature ([e0516c4](https://github.com/zyrong/vscode-node-modules/commit/e0516c457712ea5e38b1eeade9c16d37fb4ac8f9))
+
 ### [1.4.2](https://github.com/zyrong/vscode-node-modules/compare/v1.4.1...v1.4.2) (2022-07-02)
 
 ### [1.4.1](https://github.com/zyrong/vscode-node-modules/compare/v1.4.0...v1.4.1) (2022-05-30)
