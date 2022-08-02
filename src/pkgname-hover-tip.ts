@@ -1,37 +1,40 @@
-import {
-  TextDocument,
-  Position,
-  CancellationToken,
-  Definition,
-  LocationLink,
-  ExtensionContext,
-  languages,
-  window,
-  HoverProvider,
-  Hover,
-  MarkdownString,
-  ProviderResult,
-  Uri,
-  env,
-  CancellationTokenSource,
-  workspace,
-  Range
-} from "vscode";
 import { parse, ParserOptions } from '@babel/parser';
-import traverse from "@babel/traverse";
-import { isIdentifier, isImport, isStringLiteral, isTSExternalModuleReference } from '@babel/types';
-import { error, isRecord, trimLeftSlash } from "./utils";
-import { getFileInProjectRootDir, parseJsonFile } from './vs-utils';
-import { findPkgPath, getPkgJsonInfo, PackageInfo, getPackageInfo } from './utils/pkg';
-import { dirname, join } from "path";
-import { PACKAGE_JSON } from "./types";
-import { readFile } from 'fs/promises';
-import isBuiltinModule from 'is-builtin-module';
-import validate from 'validate-npm-package-name';
+import traverse from '@babel/traverse';
+import {
+  isIdentifier,
+  isImport,
+  isStringLiteral,
+  isTSExternalModuleReference,
+} from '@babel/types';
 import hostedGitInfo from 'hosted-git-info';
-import { forMatSize } from "./vs-utils/util";
+import isBuiltinModule from 'is-builtin-module';
+import { join } from 'path';
+import validate from 'validate-npm-package-name';
+import {
+  CancellationToken,
+  env,
+  ExtensionContext,
+  Hover,
+  HoverProvider,
+  languages,
+  MarkdownString,
+  Position,
+  ProviderResult,
+  Range,
+  TextDocument,
+  Uri,
+} from 'vscode';
 
-
+import { PACKAGE_JSON } from './types';
+import { error, trimLeftSlash } from './utils';
+import {
+  findPkgPath,
+  getPackageInfo,
+  getPkgJsonInfo,
+  PackageInfo,
+} from './utils/pkg';
+import { getFileInProjectRootDir } from './vs-utils';
+import { forMatSize } from './vs-utils/util';
 
 function inRange(range: { start?: number | null, end?: number | null }, val: number) {
   return range.start && range.end && val >= range.start && val <= range.end;

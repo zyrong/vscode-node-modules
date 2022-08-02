@@ -1,8 +1,9 @@
-import path from "path";
-import fs from "fs/promises";
-import { Disposable, QuickPickItem, Uri, window } from "vscode";
-import { isFile } from "./util";
-import t from "./i18n";
+import fs from 'fs/promises';
+import path from 'path';
+import { Disposable, QuickPickItem, window } from 'vscode';
+
+import t from './i18n';
+import { isFile } from './util';
 
 class FileItem implements QuickPickItem {
   label: string; // filename

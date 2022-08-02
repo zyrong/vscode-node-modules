@@ -1,28 +1,25 @@
+import { CodeRange, isSimpleNode, parse, Visitor } from '@zyrong/json-parser';
+import { ComplexNode, NodeType } from '@zyrong/json-parser/dist/node';
+import SHA512 from 'crypto-js/sha512';
+import { basename, dirname, join } from 'path';
+import validate from 'validate-npm-package-name';
 import {
-  TextDocument,
-  Position,
   CancellationToken,
   Definition,
-  LocationLink,
   ExtensionContext,
   languages,
-  window,
+  LocationLink,
+  Position,
   Range,
-} from "vscode";
-import { basename, dirname, join } from "path";
-import { existsSync } from "fs";
-import validate from 'validate-npm-package-name';
-import { parse, CodeRange, Visitor, isComplexNode, isSimpleNode } from '@zyrong/json-parser';
-import {
-  genFileLocation,
-  error,
-} from "./utils/index";
-import { getFileInProjectRootDir, } from './vs-utils';
+  TextDocument,
+  window,
+} from 'vscode';
+
+import { NODE_MODULES, PACKAGE_JSON } from './types';
+import { error, genFileLocation } from './utils/index';
+import t from './utils/localize';
 import { findPkgPath } from './utils/pkg';
-import t from "./utils/localize";
-import SHA512 from 'crypto-js/sha512';
-import { NODE_MODULES, PACKAGE_JSON } from "./types";
-import { ComplexNode, NodeType } from "@zyrong/json-parser/dist/node";
+import { getFileInProjectRootDir } from './vs-utils';
 
 function aContainB(a: CodeRange, b: CodeRange) {
   return a.start <= b.start && a.end >= b.end;
