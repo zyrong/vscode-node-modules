@@ -36,48 +36,66 @@ import {
 import { getFileInProjectRootDir } from './vs-utils';
 import { forMatSize } from './vs-utils/util';
 
-function inRange(range: { start?: number | null, end?: number | null }, val: number) {
-  return range.start && range.end && val >= range.start && val <= range.end;
+function inRange(
+  range: { start?: number | null; end?: number | null },
+  val: number
+) {
+  return range.start && range.end && val >= range.start && val <= range.end
 }
 
-
 function getSpaceString(num: number) {
-  let result = '';
+  let result = ''
   while (--num >= 0) {
-    result += '&nbsp;';
+    result += '&nbsp;'
   }
-  return result;
+  return result
 }
 
 function findQuota(text: string, eachNum: number, start: number, step: number) {
-  const quotas = new Set(["'", '"']);
-  let quotaIdx = -1;
+  const quotas = new Set(["'", '"'])
+  let quotaIdx = -1
   // 查找距离hover最近的/'|"/
   while (eachNum > 0) {
-    const char = text[start];
+    const char = text[start]
     if (quotas.has(char)) {
-      quotaIdx = start;
-      break;
+      quotaIdx = start
+      break
     }
-    start += step;
-    eachNum--;
+    start += step
+    eachNum--
   }
-  return quotaIdx;
+  return quotaIdx
 }
 
-function getLineTextQuotaBetweenString(document: TextDocument, position: Position, range: Range) {
-  const textLine = document.lineAt(position.line);
-  const hoverRowText = textLine.text;
+function getLineTextQuotaBetweenString(
+  document: TextDocument,
+  position: Position,
+  range: Range
+) {
+  const textLine = document.lineAt(position.line)
+  const hoverRowText = textLine.text
 
-  const leftQuotaIndex = findQuota(hoverRowText, range.start.character + 1, range.start.character, -1);
-  if (leftQuotaIndex === -1) { return; };
-  const rightQuotaIndex = findQuota(hoverRowText, hoverRowText.length - range.end.character, range.end.character, 1);
-  if (rightQuotaIndex === -1) { return; };
+  const leftQuotaIndex = findQuota(
+    hoverRowText,
+    range.start.character + 1,
+    range.start.character,
+    -1
+  )
+  if (leftQuotaIndex === -1) {
+    return
+  }
+  const rightQuotaIndex = findQuota(
+    hoverRowText,
+    hoverRowText.length - range.end.character,
+    range.end.character,
+    1
+  )
+  if (rightQuotaIndex === -1) {
+    return
+  }
 
-  return hoverRowText.slice(leftQuotaIndex + 1, rightQuotaIndex);
+  return hoverRowText.slice(leftQuotaIndex + 1, rightQuotaIndex)
 }
-
-
 
 export class HoverTip implements HoverProvider {
   provideHover(
@@ -85,54 +103,65 @@ export class HoverTip implements HoverProvider {
     position: Position,
     token: CancellationToken
   ): ProviderResult<Hover> {
-    const range = document.getWordRangeAtPosition(position);
-    if (!range) { return; };
-    const hoverWord = document.getText(range);
-    if (!hoverWord) { return; };
+    const range = document.getWordRangeAtPosition(position)
+    if (!range) {
+      return
+    }
+    const hoverWord = document.getText(range)
+    if (!hoverWord) {
+      return
+    }
 
-    const fullPkgPath = getLineTextQuotaBetweenString(document, position, range);
+    const fullPkgPath = getLineTextQuotaBetweenString(document, position, range)
 
     // 排除相对路径
-    if (!fullPkgPath || fullPkgPath[0] === '.') { return; };
+    if (!fullPkgPath || fullPkgPath[0] === '.') {
+      return
+    }
 
-    const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/);
-    if (!pkgNameMatch) { error('pkgname match error'); return; }
-    const pkgName = pkgNameMatch[1];
+    const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/)
+    if (!pkgNameMatch) {
+      error('pkgname match error')
+      return
+    }
+    const pkgName = pkgNameMatch[1]
 
     if (!validate(pkgName).validForOldPackages) {
-      return;
+      return
     }
 
+    const nextLinePosition = new Position(position.line + 1, 0)
+    const nextLineoffset = document.offsetAt(nextLinePosition)
+    let jscode = document.getText()
 
-    const nextLinePosition = new Position(position.line + 1, 0);
-    const nextLineoffset = document.offsetAt(nextLinePosition);
-    let jscode = document.getText();
-
-    let offset = document.offsetAt(position);
+    let offset = document.offsetAt(position)
     if (document.languageId === 'vue') {
-      const startScriptIdx = jscode.indexOf('<script');
-      const endScriptIdx = jscode.lastIndexOf('</script');
+      const startScriptIdx = jscode.indexOf('<script')
+      const endScriptIdx = jscode.lastIndexOf('</script')
 
       if (startScriptIdx !== -1 && endScriptIdx !== -1) {
-        const startScriptLabelRegex = /<script.*?>/;
-        let scriptRangeCode = jscode.slice(startScriptIdx, endScriptIdx);
-        offset -= startScriptIdx; // 同步offset与code的关系
-        const matchFullStartScriptLabel = scriptRangeCode.match(startScriptLabelRegex);
+        const startScriptLabelRegex = /<script.*?>/
+        let scriptRangeCode = jscode.slice(startScriptIdx, endScriptIdx)
+        offset -= startScriptIdx // 同步offset与code的关系
+        const matchFullStartScriptLabel = scriptRangeCode.match(
+          startScriptLabelRegex
+        )
         if (matchFullStartScriptLabel) {
-          scriptRangeCode = scriptRangeCode.slice(matchFullStartScriptLabel[0].length);
-          offset -= matchFullStartScriptLabel[0].length;
-          jscode = scriptRangeCode;
+          scriptRangeCode = scriptRangeCode.slice(
+            matchFullStartScriptLabel[0].length
+          )
+          offset -= matchFullStartScriptLabel[0].length
+          jscode = scriptRangeCode
         } else {
-          error('match vue <script> error');
-          return;
+          error('match vue <script> error')
+          return
         }
       } else {
-        error('not found <script>');
-        return;
+        error('not found <script>')
+        return
       }
     }
-    let upperPartText = jscode.slice(0, nextLineoffset);
-
+    let upperPartText = jscode.slice(0, nextLineoffset)
 
     // 正则匹配，可能存在想不到的情况，暂时不考虑，例如: code = "import a from 'xxx'" // 一个包含import的字符串
     // const pkgname = 'xxx'
@@ -142,180 +171,215 @@ export class HoverTip implements HoverProvider {
     // const dynamic_import_require_Regex = new RegExp(`(?:import|require)\\s*\\(\\s*${pkgnameRegex}\\s*\\)`)
     // const finalImportRegex = new RegExp(`${import_export_from_Regex.source}|${onlyImportRegex.source}|${dynamic_import_require_Regex.source}`)
 
-
     // 检查是否以下导入import、export、require()、import()
-    let isImportPkg = false;
+    let isImportPkg = false
 
     try {
-      let ast;
+      let ast
       const parserOptions: ParserOptions = {
         sourceType: 'module',
         ranges: false,
         startLine: 0, // position.line的起始行号为0，保持一致
         errorRecovery: true, // 兼容部分 upperPartText 存在截取错误情况
-        plugins: ['typescript']
-      };
+        plugins: ['typescript'],
+      }
       try {
-        ast = parse(upperPartText, parserOptions);
+        ast = parse(upperPartText, parserOptions)
       } catch (err) {
         try {
           // 如果使用upperPartText优化，当遇到代码中非顶层的动态import或require的情况会很容易导致paser解析失败！
           // 尝试对整个code生成ast 或者 可以考虑不支持非顶层的动态import或require提示。
-          ast = parse(jscode, parserOptions);
+          ast = parse(jscode, parserOptions)
         } catch (err: any) {
-          error(err);
-          return;
+          error(err)
+          return
         }
       }
 
       traverse(ast, {
         CallExpression(path) {
-          const { callee, arguments: arguments_ } = path.node;
-          if ((isIdentifier(callee) && (callee.name === 'require') || isImport(callee)) && arguments_.length === 1) {
-            const arg1 = arguments_[0];
+          const { callee, arguments: arguments_ } = path.node
+          if (
+            ((isIdentifier(callee) && callee.name === 'require') ||
+              isImport(callee)) &&
+            arguments_.length === 1
+          ) {
+            const arg1 = arguments_[0]
             if (isStringLiteral(arg1) && inRange(arg1, offset)) {
-              isImportPkg = true;
-              path.stop();
+              isImportPkg = true
+              path.stop()
             }
           }
         },
         ImportDeclaration(path) {
-          const { source } = path.node;
+          const { source } = path.node
           if (inRange(source, offset)) {
-            isImportPkg = true;
-            path.stop();
+            isImportPkg = true
+            path.stop()
           }
         },
         ExportNamedDeclaration(path) {
-          const { source } = path.node;
+          const { source } = path.node
           if (isStringLiteral(source) && inRange(source, offset)) {
-            isImportPkg = true;
-            path.stop();
+            isImportPkg = true
+            path.stop()
           }
         },
         TSImportEqualsDeclaration(path) {
-          if (isTSExternalModuleReference(path.node.moduleReference) && inRange(path.node.moduleReference.expression, offset)) {
-            isImportPkg = true;
-            path.stop();
+          if (
+            isTSExternalModuleReference(path.node.moduleReference) &&
+            inRange(path.node.moduleReference.expression, offset)
+          ) {
+            isImportPkg = true
+            path.stop()
           }
-        }
-      });
+        },
+      })
     } catch (err: any) {
-      error(err);
-      return;
+      error(err)
+      return
     }
 
-    if (!isImportPkg) { return; };
+    if (!isImportPkg) {
+      return
+    }
 
-    const rootDir = getFileInProjectRootDir(document.uri.path);
+    const rootDir = getFileInProjectRootDir(document.uri.path)
     if (!rootDir) {
-      error("寻找项目根目录失败");
-      return;
+      error('寻找项目根目录失败')
+      return
     }
 
     return new Promise(async (resolve, reject) => {
-      const isNodeBuiltinModule = isBuiltinModule(pkgName);
-      let contents: MarkdownString | undefined;
+      const isNodeBuiltinModule = isBuiltinModule(pkgName)
+      let contents: MarkdownString | undefined
       if (isNodeBuiltinModule) {
-        contents = (this.generateTipMarkdown(pkgName, true));
+        contents = this.generateTipMarkdown(pkgName, true)
       } else {
-        let pkgJsonPath: string | undefined;
-        const pkgPath = findPkgPath(pkgName, document.uri.path, rootDir);
-        pkgPath && (pkgJsonPath = join(pkgPath, PACKAGE_JSON));
-        const pkgJson = await (!token.isCancellationRequested && getPkgJsonInfo(pkgName, pkgJsonPath, rootDir));
+        let pkgJsonPath: string | undefined
+        const pkgPath = findPkgPath(pkgName, document.uri.path, rootDir)
+        pkgPath && (pkgJsonPath = join(pkgPath, PACKAGE_JSON))
+        const pkgJson = await (!token.isCancellationRequested &&
+          getPkgJsonInfo(pkgName, pkgJsonPath, rootDir))
         if (pkgJson) {
-          const pkgInfo = await (!token.isCancellationRequested && getPackageInfo(pkgJson));
+          const pkgInfo = await (!token.isCancellationRequested &&
+            getPackageInfo(pkgJson))
           if (pkgInfo) {
-            contents = this.generateTipMarkdown(pkgName, pkgInfo, pkgJsonPath);
+            contents = this.generateTipMarkdown(pkgName, pkgInfo, pkgJsonPath)
           }
         }
       }
-      contents ? resolve(new Hover(contents)) : reject();
-    });
+      contents ? resolve(new Hover(contents)) : reject()
+    })
   }
 
-  generateTipMarkdown(pkgName: string, isNodeBuiltinModule: true): MarkdownString;
-  generateTipMarkdown(pkgName: string, packageInfo: PackageInfo, pkgJsonPath: string | undefined): MarkdownString;
-  generateTipMarkdown(pkgName: string, arg: true | PackageInfo, pkgJsonPath?: string | undefined): MarkdownString {
-    let isNodeBuiltinModule = false;
+  generateTipMarkdown(
+    pkgName: string,
+    isNodeBuiltinModule: true
+  ): MarkdownString
+  generateTipMarkdown(
+    pkgName: string,
+    packageInfo: PackageInfo,
+    pkgJsonPath: string | undefined
+  ): MarkdownString
+  generateTipMarkdown(
+    pkgName: string,
+    arg: true | PackageInfo,
+    pkgJsonPath?: string | undefined
+  ): MarkdownString {
+    let isNodeBuiltinModule = false
     let markdown = '',
-      homepageUrl: string | undefined, repositoryUrl: string | undefined, pkgVersion = '', sizeInfo = '';
+      homepageUrl: string | undefined,
+      repositoryUrl: string | undefined,
+      pkgVersion = '',
+      sizeInfo = ''
     if (typeof arg === 'boolean') {
-      homepageUrl = `https://nodejs.org/${env.language}/`;
-      repositoryUrl = 'https://github.com/nodejs/node';
-      isNodeBuiltinModule = true;
+      homepageUrl = `https://nodejs.org/${env.language}/`
+      repositoryUrl = 'https://github.com/nodejs/node'
+      isNodeBuiltinModule = true
     } else {
-      const packageInfo = arg;
-      pkgVersion = packageInfo.version;
-      homepageUrl = packageInfo.homepageUrl;
-      repositoryUrl = packageInfo.repositoryUrl;
+      const packageInfo = arg
+      pkgVersion = packageInfo.version
+      homepageUrl = packageInfo.homepageUrl
+      repositoryUrl = packageInfo.repositoryUrl
 
       function extractGitUrl(url: string) {
-        let result: string | undefined;
+        let result: string | undefined
         if (/^https?:\/\/.*/i.test(url)) {
-          result = url;
+          result = url
         } else {
-          const gitInfo = hostedGitInfo.fromUrl(trimLeftSlash(url));
+          const gitInfo = hostedGitInfo.fromUrl(trimLeftSlash(url))
           if (gitInfo) {
-            result = gitInfo.https({ noGitPlus: true, noCommittish: true });
+            result = gitInfo.https({ noGitPlus: true, noCommittish: true })
           }
         }
         if (result && /\.git$/.test(result)) {
-          result = result.slice(0, -4);
+          result = result.slice(0, -4)
         }
-        return result;
+        return result
       }
-
 
       if (repositoryUrl) {
-        repositoryUrl = extractGitUrl(repositoryUrl);
+        repositoryUrl = extractGitUrl(repositoryUrl)
       }
       if (!repositoryUrl && packageInfo.bugsUrl) {
-        let bugsUrl = packageInfo.bugsUrl;
-        const idx = bugsUrl.indexOf('/issues');
+        let bugsUrl = packageInfo.bugsUrl
+        const idx = bugsUrl.indexOf('/issues')
         if (idx !== -1) {
-          bugsUrl = bugsUrl.slice(0, idx);
+          bugsUrl = bugsUrl.slice(0, idx)
         }
-        repositoryUrl = extractGitUrl(bugsUrl);
+        repositoryUrl = extractGitUrl(bugsUrl)
       }
 
       if (repositoryUrl === homepageUrl) {
-        homepageUrl = undefined;
+        homepageUrl = undefined
       }
 
       if (packageInfo.webpackBundleSize) {
-        sizeInfo = `BundleSize:${getSpaceString(3)}${forMatSize(packageInfo.webpackBundleSize.normal)}${getSpaceString(3)}(gzip:${getSpaceString(1)}${forMatSize(packageInfo.webpackBundleSize.gzip)})`;
+        sizeInfo = `BundleSize:${getSpaceString(3)}${forMatSize(
+          packageInfo.webpackBundleSize.normal
+        )}${getSpaceString(3)}(gzip:${getSpaceString(1)}${forMatSize(
+          packageInfo.webpackBundleSize.gzip
+        )})`
       }
     }
 
-    let pkgnameMarkdown = '';
+    let pkgnameMarkdown = ''
     if (isNodeBuiltinModule) {
-      pkgnameMarkdown = `\`${pkgName}\``;
+      pkgnameMarkdown = `\`${pkgName}\``
     } else {
-      pkgnameMarkdown = `\`${pkgName}${pkgVersion ? '@' + pkgVersion : ''}\``;
+      pkgnameMarkdown = `\`${pkgName}${pkgVersion ? '@' + pkgVersion : ''}\``
       if (pkgJsonPath) {
         // command uri: https://liiked.github.io/VS-Code-Extension-Doc-ZH/#/extension-guides/command?id=%e5%91%bd%e4%bb%a4%e7%9a%84urls
-        const showTextDocumentCmdUri = Uri.parse(`command:extension.show.textDocument?${encodeURIComponent(`"${pkgJsonPath}"`)}`);
-        pkgnameMarkdown = `[${pkgnameMarkdown}](${showTextDocumentCmdUri})`;
+        const showTextDocumentCmdUri = Uri.parse(
+          `command:extension.show.textDocument?${encodeURIComponent(
+            `"${pkgJsonPath}"`
+          )}`
+        )
+        pkgnameMarkdown = `[${pkgnameMarkdown}](${showTextDocumentCmdUri})`
       }
     }
-    markdown += `<span style="color:#569CD6;">${pkgnameMarkdown}</span>${getSpaceString(2)}`;
+    markdown += `<span style="color:#569CD6;">${pkgnameMarkdown}</span>${getSpaceString(
+      2
+    )}`
     if (!isNodeBuiltinModule) {
-      markdown += `[NPM](https://www.npmjs.com/package/${pkgName}${pkgVersion ? '/v/' + pkgVersion : ''})${getSpaceString(4)}`;
+      markdown += `[NPM](https://www.npmjs.com/package/${pkgName}${
+        pkgVersion ? '/v/' + pkgVersion : ''
+      })${getSpaceString(4)}`
     }
     if (homepageUrl) {
-      markdown += `[HomePage](${homepageUrl})${getSpaceString(4)}`;
+      markdown += `[HomePage](${homepageUrl})${getSpaceString(4)}`
     }
     if (repositoryUrl) {
-      markdown += `[Repository](${repositoryUrl})${getSpaceString(4)}`;
+      markdown += `[Repository](${repositoryUrl})${getSpaceString(4)}`
     }
     if (sizeInfo) {
-      markdown += `<br/>${sizeInfo}`;
+      markdown += `<br/>${sizeInfo}`
     }
-    const contents = new MarkdownString(markdown);
-    contents.isTrusted = true;
-    contents.supportHtml = true;
-    return contents;
+    const contents = new MarkdownString(markdown)
+    contents.isTrusted = true
+    contents.supportHtml = true
+    return contents
   }
 }
 
@@ -323,7 +387,7 @@ export default function (context: ExtensionContext) {
   context.subscriptions.push(
     languages.registerHoverProvider(
       ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'vue'],
-      new HoverTip
+      new HoverTip()
     )
-  );
+  )
 }

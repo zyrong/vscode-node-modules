@@ -1,12 +1,12 @@
-import path from 'path';
-import Mocha from 'mocha';
+import { exec as exec_ } from 'child_process';
 import glob from 'glob';
-import { exec as exec_, ExecOptions, execFile } from 'child_process';
+import Mocha from 'mocha';
+import path from 'path';
 import { promisify } from 'util';
-const exec = promisify(exec_);
-import { workspace } from 'vscode';
+
 import { getWorkSpacePath } from '../util';
 
+const exec = promisify(exec_);
 
 export async function run(): Promise<void> {
   const WorkspacePath = getWorkSpacePath();

@@ -1,6 +1,7 @@
-import { Position, workspace } from "vscode";
 import chai, { expect } from 'chai';
-import chaiJestSnapshot from "chai-jest-snapshot";
+import chaiJestSnapshot from 'chai-jest-snapshot';
+import { Position, workspace } from 'vscode';
+
 chai.use(chaiJestSnapshot);
 
 const snapShotIndexMap: Record<string, Record<string, number>> = {};
@@ -42,9 +43,4 @@ function getWordPosition(text: string, word: string, startLine = 0): Position {
   return new Position(line === -1 ? line : (line + startLine), character);
 }
 
-export {
-  getWorkSpacePath,
-  getWordPosition,
-  sleep,
-  matchSnapshot
-};
+export { getWordPosition, getWorkSpacePath, matchSnapshot, sleep };

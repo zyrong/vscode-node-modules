@@ -1,19 +1,26 @@
-import assert from 'assert';
-import path, { basename, join } from 'path';
-import { suiteTeardown, suiteSetup, teardown, setup } from 'mocha';
+import { parse, Visitor } from '@zyrong/json-parser';
+import { teardown } from 'mocha';
+import path, { join } from 'path';
 import sinon from 'sinon';
-import rimraf from 'rimraf';
-import { CodeRange, parse, Visitor } from '@zyrong/json-parser';
-
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
-import { TextDocument, extensions, window, Uri, Range, workspace, commands, Position } from 'vscode';
-import * as myExtension from '../../../extension';
-import { getWorkSpacePath, getWordPosition } from '../util';
-import { DOT_PACKAGE_LOCK_JSON, NODE_MODULES, PACKAGE_JSON, PACKAGE_LOCK_JSON } from '../../../types';
+import {
+  commands,
+  extensions,
+  Range,
+  TextDocument,
+  Uri,
+  window,
+  workspace,
+} from 'vscode';
 
-
-
+import {
+  DOT_PACKAGE_LOCK_JSON,
+  NODE_MODULES,
+  PACKAGE_JSON,
+  PACKAGE_LOCK_JSON,
+} from '../../../types';
+import { getWorkSpacePath } from '../util';
 
 function closeAllEditors() {
   return commands.executeCommand('workbench.action.closeAllEditors');

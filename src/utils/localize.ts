@@ -1,6 +1,6 @@
-import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
-import { extensions } from "vscode";
+import { existsSync, readFileSync } from 'fs';
+import { resolve } from 'path';
+import { extensions } from 'vscode';
 
 interface ILanguagePack {
   [key: string]: string;

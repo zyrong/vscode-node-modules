@@ -1,4 +1,4 @@
-import { window } from "vscode";
+import { window } from 'vscode';
 
 export const error = (function () {
   const output = window.createOutputChannel("vs-util");

@@ -1,5 +1,6 @@
-import { window, workspace } from "vscode";
-import t from "./i18n";
+import { window, workspace } from 'vscode';
+
+import t from './i18n';
 
 export default async function showPickWorkspaceFolder(): Promise<string> {
   const workspaceFolders = workspace.workspaceFolders;
