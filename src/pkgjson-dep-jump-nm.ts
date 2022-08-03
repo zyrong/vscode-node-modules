@@ -1,8 +1,8 @@
-import { CodeRange, isSimpleNode, parse, Visitor } from '@zyrong/json-parser';
-import { ComplexNode, NodeType } from '@zyrong/json-parser/dist/node';
-import SHA512 from 'crypto-js/sha512';
-import { basename, dirname, join } from 'path';
-import validate from 'validate-npm-package-name';
+import { CodeRange, isSimpleNode, parse, Visitor } from '@zyrong/json-parser'
+import { ComplexNode, NodeType } from '@zyrong/json-parser/dist/node'
+import SHA512 from 'crypto-js/sha512'
+import { basename, dirname, join } from 'path'
+import validate from 'validate-npm-package-name'
 import {
   CancellationToken,
   Definition,
@@ -13,13 +13,13 @@ import {
   Range,
   TextDocument,
   window,
-} from 'vscode';
+} from 'vscode'
 
-import { NODE_MODULES, PACKAGE_JSON } from './types';
-import { error, genFileLocation } from './utils/index';
-import t from './utils/localize';
-import { findPkgPath } from './utils/pkg';
-import { getFileInProjectRootDir } from './vs-utils';
+import { NODE_MODULES, PACKAGE_JSON } from './types'
+import { error, genFileLocation } from './utils/index'
+import t from './utils/localize'
+import { findPkgPath } from './utils/pkg'
+import { getFileInProjectRootDir } from './vs-utils'
 
 function aContainB(a: CodeRange, b: CodeRange) {
   return a.start <= b.start && a.end >= b.end

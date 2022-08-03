@@ -1,13 +1,13 @@
-import { access, readdir, stat } from 'fs/promises';
-import { basename, join } from 'path';
-import validate = require('validate-npm-package-name');
-import { Uri, window, workspace } from 'vscode';
+import { access, readdir, stat } from 'fs/promises'
+import { basename, join } from 'path'
+import validate = require('validate-npm-package-name')
+import { Uri, window, workspace } from 'vscode'
 
-import { NODE_MODULES, PACKAGE_JSON } from './types';
-import { error } from './utils';
-import t from './utils/localize';
-import { getFileInProjectRootDir } from './vs-utils';
-import showPickWorkspaceFolder from './vs-utils/showPickWorkspaceFolder';
+import { NODE_MODULES, PACKAGE_JSON } from './types'
+import { error } from './utils'
+import t from './utils/localize'
+import { getFileInProjectRootDir } from './vs-utils'
+import showPickWorkspaceFolder from './vs-utils/showPickWorkspaceFolder'
 
 export default async function (uri: Uri) {
   // package.json中menus已经限定目录名为node_modules才触发该命令，所以uri.path存在必定是node_modulesPath

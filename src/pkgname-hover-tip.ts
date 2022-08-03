@@ -1,15 +1,15 @@
-import { parse, ParserOptions } from '@babel/parser';
-import traverse from '@babel/traverse';
+import { parse, ParserOptions } from '@babel/parser'
+import traverse from '@babel/traverse'
 import {
   isIdentifier,
   isImport,
   isStringLiteral,
   isTSExternalModuleReference,
-} from '@babel/types';
-import hostedGitInfo from 'hosted-git-info';
-import isBuiltinModule from 'is-builtin-module';
-import { join } from 'path';
-import validate from 'validate-npm-package-name';
+} from '@babel/types'
+import hostedGitInfo from 'hosted-git-info'
+import isBuiltinModule from 'is-builtin-module'
+import { join } from 'path'
+import validate from 'validate-npm-package-name'
 import {
   CancellationToken,
   env,
@@ -23,18 +23,18 @@ import {
   Range,
   TextDocument,
   Uri,
-} from 'vscode';
+} from 'vscode'
 
-import { PACKAGE_JSON } from './types';
-import { error, trimLeftSlash } from './utils';
+import { PACKAGE_JSON } from './types'
+import { error, trimLeftSlash } from './utils'
 import {
   findPkgPath,
   getPackageInfo,
   getPkgJsonInfo,
   PackageInfo,
-} from './utils/pkg';
-import { getFileInProjectRootDir } from './vs-utils';
-import { forMatSize } from './vs-utils/util';
+} from './utils/pkg'
+import { getFileInProjectRootDir } from './vs-utils'
+import { forMatSize } from './vs-utils/util'
 
 function inRange(
   range: { start?: number | null; end?: number | null },
