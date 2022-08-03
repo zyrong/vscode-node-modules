@@ -1,4 +1,4 @@
-{
+module.exports = {
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -26,4 +26,4 @@
     "semi": "off"
   },
   "ignorePatterns": ["out", "dist", "**/*.d.ts"]
-}
+};
