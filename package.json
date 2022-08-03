@@ -1,231 +1,243 @@
 {
-	"name": "node-modules",
-	"displayName": "node_modules",
-	"description": "search node_modules package | click package.json package name jumps to the corresponding node_modules",
-	"publisher": "zyrong",
-	"keywords": [
-		"search",
-		"node_modules",
-		"package",
-		"goto",
-		"jump"
-	],
-	"version": "1.5.0",
-	"engines": {
-		"vscode": "^1.43.1"
-	},
-	"icon": "logo.png",
-	"galleryBanner": {
-		"color": "#2f54eb",
-		"theme": "light"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onLanguage:json",
-		"onLanguage:jsonc",
-		"onLanguage:javascript",
-		"onLanguage:javascriptreact",
-		"onLanguage:typescript",
-		"onLanguage:typescriptreact",
-		"onLanguage:vue",
-		"onCommand:extension.search.package",
-		"onCommand:extension.search.node_modules"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"configuration": {},
-		"commands": [
-			{
-				"command": "extension.search.package",
-				"title": "%cmd.SearchPackage%"
-			},
-			{
-				"command": "extension.search.node_modules",
-				"title": "%cmd.Searchnm%"
-			}
-		],
-		"menus": {
-			"explorer/context": [
-				{
-					"when": "resourceFilename == node_modules",
-					"command": "extension.search.package",
-					"group": "4_search@1"
-				},
-				{
-					"when": "resourceFilename == node_modules",
-					"command": "extension.search.node_modules",
-					"group": "4_search@2"
-				}
-			]
-		},
-		"keybindings": [
-			{
-				"command": "extension.search.package",
-				"mac": "cmd+k p",
-				"key": "ctrl+k p"
-			},
-			{
-				"command": "extension.search.node_modules",
-				"mac": "cmd+k n",
-				"key": "ctrl+k n"
-			}
-		],
-		"walkthroughs": [
-			{
-				"id": "node_modules start",
-				"title": "%walkthrough.start.title%",
-				"featuredFor": [
-					"node_modules",
-					"package.json"
-				],
-				"description": "%walkthrough.start.description%",
-				"steps": [
-					{
-						"id": "openFolder",
-						"title": "%walkthrough.start.openFolder.title%",
-						"completionEvents": [
-							"onCommand:workbench.action.files.openFolder"
-						],
-						"when": "workspaceFolderCount == 0",
-						"description": "%walkthrough.start.openFolder.description%",
-						"media": {
-							"markdown": "resources/walkthroughs/empty.md"
-						}
-					},
-					{
-						"id": "pkgjson-dep-jump-nm",
-						"title": "%walkthrough.start.pkgjson_dep_definition.title%",
-						"completionEvents": [
-							"onStepSelected"
-						],
-						"when": "workspaceFolderCount > 0",
-						"description": "%walkthrough.start.pkgjson_dep_definition.description%",
-						"media": {
-							"image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif",
-							"altText": ""
-						}
-					},
-					{
-						"id": "search Package",
-						"title": "%walkthrough.start.searchPackage.title%",
-						"completionEvents": [
-							"onCommand:extension.search.package"
-						],
-						"when": "workspaceFolderCount > 0",
-						"description": "%walkthrough.start.searchPackage.description%",
-						"media": {
-							"image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/2.gif",
-							"altText": ""
-						}
-					},
-					{
-						"id": "search node_modules",
-						"title": "%walkthrough.start.searchNode_modules.title%",
-						"completionEvents": [
-							"onCommand:extension.search.node_modules"
-						],
-						"when": "workspaceFolderCount > 0",
-						"description": "%walkthrough.start.searchNode_modules.description%",
-						"media": {
-							"image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif",
-							"altText": ""
-						}
-					},
-					{
-						"id": "hover packageName",
-						"title": "%walkthrough.start.hoverPackageName.title%",
-						"completionEvents": [
-							"onStepSelected"
-						],
-						"when": "workspaceFolderCount > 0",
-						"description": "%walkthrough.start.hoverPackageName.description%",
-						"media": {
-							"image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif",
-							"altText": ""
-						}
-					}
-				]
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "yarn run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "rimraf ./out/test && yarn run compile && yarn run lint",
-		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js",
-		"changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
-		"release-version": "standard-version",
-		"build": "vsce package"
-	},
-	"dependencies": {
-		"@babel/parser": "^7.18.10",
-		"@babel/traverse": "^7.18.10",
-		"@babel/types": "^7.18.10",
-		"@zyrong/json-parser": "0.4.0",
-		"crypto-js": "^4.1.1",
-		"got": "^11.8.5",
-		"hosted-git-info": "^5.0.0",
-		"is-builtin-module": "^3.2.0",
-		"pacote": "^13.6.1",
-		"validate-npm-package-name": "^4.0.0"
-	},
-	"devDependencies": {
-		"@commitlint/cli": "^15.0.0",
-		"@commitlint/config-conventional": "^15.0.0",
-		"@types/babel__traverse": "^7.17.1",
-		"@types/chai": "^4.3.1",
-		"@types/chai-jest-snapshot": "^1.3.6",
-		"@types/crypto-js": "^4.1.1",
-		"@types/glob": "^7.2.0",
-		"@types/hosted-git-info": "^3.0.2",
-		"@types/mocha": "^9.1.1",
-		"@types/node": "14.x",
-		"@types/pacote": "^11.1.5",
-		"@types/rimraf": "^3.0.2",
-		"@types/sinon": "^10.0.13",
-		"@types/validate-npm-package-name": "^3.0.3",
-		"@types/vscode": "^1.43.1",
-		"@typescript-eslint/eslint-plugin": "^5.32.0",
-		"@typescript-eslint/parser": "^5.32.0",
-		"@vscode/test-electron": "^2.1.5",
-		"chai": "^4.3.6",
-		"chai-jest-snapshot": "^2.0.0",
-		"cz-conventional-changelog": "^3.3.0",
-		"eslint": "^8.21.0",
-		"glob": "^7.2.3",
-		"husky": "4.3.8",
-		"mocha": "^9.2.2",
-		"rimraf": "^3.0.2",
-		"sinon": "^14.0.0",
-		"standard-version": "^9.5.0",
-		"typescript": "^4.7.4"
-	},
-	"config": {
-		"commitizen": {
-			"path": "./node_modules/cz-conventional-changelog"
-		}
-	},
-	"husky": {
-		"hooks": {
-			"commit-msg": "commitlint -x @commitlint/config-conventional -e"
-		}
-	},
-	"bugs": {
-		"url": "https://github.com/zyrong/vscode-node-modules/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/zyrong/vscode-node-modules"
-	},
-	"homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md",
-	"__metadata": {
-		"id": "a6541359-bd98-42b1-8e17-271427e5983b",
-		"publisherDisplayName": "zyrong",
-		"publisherId": "c70ef477-23eb-4db9-8ab8-5585b5192fd4",
-		"isPreReleaseVersion": false
-	}
+  "name": "node-modules",
+  "displayName": "node_modules",
+  "description": "search node_modules package | click package.json package name jumps to the corresponding node_modules",
+  "publisher": "zyrong",
+  "keywords": [
+    "search",
+    "node_modules",
+    "package",
+    "goto",
+    "jump"
+  ],
+  "version": "1.5.0",
+  "engines": {
+    "vscode": "^1.43.1"
+  },
+  "icon": "logo.png",
+  "galleryBanner": {
+    "color": "#2f54eb",
+    "theme": "light"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:jsonc",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:vue",
+    "onCommand:extension.search.package",
+    "onCommand:extension.search.node_modules"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {},
+    "commands": [
+      {
+        "command": "extension.search.package",
+        "title": "%cmd.SearchPackage%"
+      },
+      {
+        "command": "extension.search.node_modules",
+        "title": "%cmd.Searchnm%"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceFilename == node_modules",
+          "command": "extension.search.package",
+          "group": "4_search@1"
+        },
+        {
+          "when": "resourceFilename == node_modules",
+          "command": "extension.search.node_modules",
+          "group": "4_search@2"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "extension.search.package",
+        "mac": "cmd+k p",
+        "key": "ctrl+k p"
+      },
+      {
+        "command": "extension.search.node_modules",
+        "mac": "cmd+k n",
+        "key": "ctrl+k n"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "node_modules start",
+        "title": "%walkthrough.start.title%",
+        "featuredFor": [
+          "node_modules",
+          "package.json"
+        ],
+        "description": "%walkthrough.start.description%",
+        "steps": [
+          {
+            "id": "openFolder",
+            "title": "%walkthrough.start.openFolder.title%",
+            "completionEvents": [
+              "onCommand:workbench.action.files.openFolder"
+            ],
+            "when": "workspaceFolderCount == 0",
+            "description": "%walkthrough.start.openFolder.description%",
+            "media": {
+              "markdown": "resources/walkthroughs/empty.md"
+            }
+          },
+          {
+            "id": "pkgjson-dep-jump-nm",
+            "title": "%walkthrough.start.pkgjson_dep_definition.title%",
+            "completionEvents": [
+              "onStepSelected"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.pkgjson_dep_definition.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "search Package",
+            "title": "%walkthrough.start.searchPackage.title%",
+            "completionEvents": [
+              "onCommand:extension.search.package"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.searchPackage.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/2.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "search node_modules",
+            "title": "%walkthrough.start.searchNode_modules.title%",
+            "completionEvents": [
+              "onCommand:extension.search.node_modules"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.searchNode_modules.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "hover packageName",
+            "title": "%walkthrough.start.hoverPackageName.title%",
+            "completionEvents": [
+              "onStepSelected"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.hoverPackageName.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif",
+              "altText": ""
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "rimraf ./out/test && yarn run compile && yarn run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+    "release-version": "standard-version",
+    "build": "vsce package",
+    "eslint:fix": "eslint --config ./.eslintrc.js --fix --ext .js,.ts",
+    "prettier": "prettier --config ./.prettierrc.js --write **/*.{js,ts}"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.18.10",
+    "@babel/traverse": "^7.18.10",
+    "@babel/types": "^7.18.10",
+    "@zyrong/json-parser": "0.4.0",
+    "crypto-js": "^4.1.1",
+    "got": "^11.8.5",
+    "hosted-git-info": "^5.0.0",
+    "is-builtin-module": "^3.2.0",
+    "pacote": "^13.6.1",
+    "validate-npm-package-name": "^4.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^15.0.0",
+    "@commitlint/config-conventional": "^15.0.0",
+    "@types/babel__traverse": "^7.17.1",
+    "@types/chai": "^4.3.1",
+    "@types/chai-jest-snapshot": "^1.3.6",
+    "@types/crypto-js": "^4.1.1",
+    "@types/glob": "^7.2.0",
+    "@types/hosted-git-info": "^3.0.2",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "14.x",
+    "@types/pacote": "^11.1.5",
+    "@types/rimraf": "^3.0.2",
+    "@types/sinon": "^10.0.13",
+    "@types/validate-npm-package-name": "^3.0.3",
+    "@types/vscode": "^1.43.1",
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
+    "@vscode/test-electron": "^2.1.5",
+    "chai": "^4.3.6",
+    "chai-jest-snapshot": "^2.0.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.21.0",
+    "glob": "^7.2.3",
+    "husky": "4.3.8",
+    "mocha": "^9.2.2",
+    "rimraf": "^3.0.2",
+    "sinon": "^14.0.0",
+    "standard-version": "^9.5.0",
+    "typescript": "^4.7.4",
+    "lint-staged": "^12.3.7",
+    "prettier": "^2.5.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -x @commitlint/config-conventional -e"
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "npm run prettier",
+      "npm run eslint:fix"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/zyrong/vscode-node-modules/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zyrong/vscode-node-modules"
+  },
+  "homepage": "https://github.com/zyrong/vscode-node-modules/blob/master/README.md",
+  "__metadata": {
+    "id": "a6541359-bd98-42b1-8e17-271427e5983b",
+    "publisherDisplayName": "zyrong",
+    "publisherId": "c70ef477-23eb-4db9-8ab8-5585b5192fd4",
+    "isPreReleaseVersion": false
+  }
 }
