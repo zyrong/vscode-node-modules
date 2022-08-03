@@ -161,7 +161,8 @@
     "release-version": "standard-version",
     "build": "vsce package",
     "eslint:fix": "eslint --config ./.eslintrc.js --fix --ext .js,.ts",
-    "prettier": "prettier --config ./.prettierrc.js --write **/*.{js,ts}"
+    "prettier": "prettier --config ./.prettierrc.js --write **/*.{js,ts}",
+    "format-imports": "format-imports --config ./import-sorter.json ./src"
   },
   "dependencies": {
     "@babel/parser": "^7.18.10",
@@ -198,17 +199,18 @@
     "chai-jest-snapshot": "^2.0.0",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.21.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "format-imports": "^3.0.12",
     "glob": "^7.2.3",
     "husky": "4.3.8",
+    "lint-staged": "^12.3.7",
     "mocha": "^9.2.2",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "sinon": "^14.0.0",
     "standard-version": "^9.5.0",
-    "typescript": "^4.7.4",
-    "lint-staged": "^12.3.7",
-    "prettier": "^2.5.1",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-prettier": "^4.0.0"
+    "typescript": "^4.7.4"
   },
   "config": {
     "commitizen": {
@@ -223,7 +225,8 @@
   "lint-staged": {
     "*.{js,ts}": [
       "npm run prettier",
-      "npm run eslint:fix"
+      "npm run eslint:fix",
+      "npm run format-imports"
     ]
   },
   "bugs": {
