@@ -1,11 +1,22 @@
-import { dirname, join } from "path";
-import YAML from 'yaml';
-import { existsSync, readFileSync } from "fs";
-import pacote, { ManifestResult, Manifest } from 'pacote';
-import { NODE_MODULES, PACKAGE_JSON, SUPPORT_PKGMANAGER_NAMES, T_SUPPORT_PKGMANAGER_NAMES } from "../types";
-import { error, isFileSync, isRecord, requestDebounce, trimRightSlash, trimLeftSlash } from ".";
+import { existsSync } from 'fs';
+import got from 'got';
+import pacote, { Manifest, ManifestResult } from 'pacote';
+import { dirname, join } from 'path';
+
+import {
+  NODE_MODULES,
+  PACKAGE_JSON,
+  SUPPORT_PKGMANAGER_NAMES,
+  T_SUPPORT_PKGMANAGER_NAMES,
+} from '../types';
 import { isFile, parseJsonFile } from '../vs-utils';
-import got from "got";
+import {
+  error,
+  isFileSync,
+  isRecord,
+  requestDebounce,
+  trimRightSlash,
+} from './';
 
 type DepsOffsetRange = {
   peerDependencies?: number[]

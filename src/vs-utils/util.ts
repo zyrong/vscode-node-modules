@@ -1,6 +1,6 @@
-import { constants } from "fs";
-import { access, stat, readFile } from "fs/promises";
-import { workspace } from "vscode";
+import { constants } from 'fs';
+import { access, readFile, stat } from 'fs/promises';
+import { workspace } from 'vscode';
 
 export async function isFile(path: string): Promise<boolean> {
   try {

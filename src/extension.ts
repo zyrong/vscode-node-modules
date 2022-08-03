@@ -1,6 +1,7 @@
-import { ExtensionContext, commands, workspace, window, Uri } from "vscode";
-import t from "./utils/localize";
-import { isFile } from "./vs-utils";
+import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
+
+import t from './utils/localize';
+import { isFile } from './vs-utils';
 
 export function activate(context: ExtensionContext) {
   import('./pkgjson-dep-jump-nm').then(({ default: packageJsonJumpToNodeModules }) => {

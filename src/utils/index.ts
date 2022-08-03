@@ -1,6 +1,5 @@
-import { workspace, Location, Uri, Position, window } from "vscode";
-import { existsSync, readFileSync, statSync } from "fs";
-
+import { statSync } from 'fs';
+import { Location, Position, Uri, window } from 'vscode';
 
 export function isFileSync(path: string): Boolean {
   try {
