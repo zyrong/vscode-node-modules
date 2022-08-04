@@ -1,29 +1,29 @@
-import { statSync } from 'fs';
-import { Location, Position, Uri, window } from 'vscode';
+import { statSync } from 'fs'
+import { Location, Position, Uri, window } from 'vscode'
 
 export function isFileSync(path: string): Boolean {
   try {
-    const _stat = statSync(path);
-    return _stat.isFile();
+    const _stat = statSync(path)
+    return _stat.isFile()
   } catch (error) {
-    return false;
+    return false
   }
 }
 export function isDirectorySync(path: string): Boolean {
   try {
-    const _stat = statSync(path);
-    return _stat.isDirectory();
+    const _stat = statSync(path)
+    return _stat.isDirectory()
   } catch (error) {
-    return false;
+    return false
   }
 }
 
 export function trimRightSlash(str: string) {
-  return str.replace(/\/*$/, '');
+  return str.replace(/\/*$/, '')
 }
 
 export function trimLeftSlash(str: string) {
-  return str.replace(/\/*$/, '');
+  return str.replace(/\/*$/, '')
 }
 
 // 生成 vscode.location对象 用来让vscode跳转到指定文件的指定位置
@@ -33,32 +33,35 @@ export const genFileLocation = (
   character: number = 0
 ) => {
   // new vscode.Position(0, 0) 表示跳转到某个文件的第一行第一列
-  return new Location(Uri.file(destPath), new Position(line, character));
-};
-
-export const error = (function () {
-  const output = window.createOutputChannel("node_modules");
-  return function (msg: string, err?: any) {
-    output.appendLine(`[Error]: ${msg}. \n${err}\n`);
-    // console.error(`[node_modules extension]: ${msg}. \n${err}`);
-  };
-})();
-
-export function isRecord(target: any): target is Record<string, any> {
-  return target !== null && typeof target === 'object';
+  return new Location(Uri.file(destPath), new Position(line, character))
 }
 
-export function requestDebounce<T extends any[], R,>(fn: (...args: T) => Promise<R>, getKey: (...args: any[]) => any) {
-  const promises = new Map();
+export const error = (function () {
+  const output = window.createOutputChannel('node_modules')
+  return function (msg: string, err?: any) {
+    output.appendLine(`[Error]: ${msg}. \n${err}\n`)
+    // console.error(`[node_modules extension]: ${msg}. \n${err}`);
+  }
+})()
+
+export function isRecord(target: any): target is Record<string, any> {
+  return target !== null && typeof target === 'object'
+}
+
+export function requestDebounce<T extends any[], R>(
+  fn: (...args: T) => Promise<R>,
+  getKey: (...args: any[]) => any
+) {
+  const promises = new Map()
   return function (...args: T): Promise<R> {
-    const key = getKey(...args);
+    const key = getKey(...args)
     if (!promises.has(key)) {
-      const promise = fn(...args);
-      promises.set(key, promise);
+      const promise = fn(...args)
+      promises.set(key, promise)
       promise.finally(() => {
-        promises.delete(key);
-      });
+        promises.delete(key)
+      })
     }
-    return promises.get(key)!;
-  };
+    return promises.get(key)!
+  }
 }
