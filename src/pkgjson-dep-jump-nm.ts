@@ -268,7 +268,7 @@ async function provideDefinition(
   const fileName = basename(filepath)
   const handler = strategy[fileName]
   if (handler) {
-    const wordRange = document.getWordRangeAtPosition(position)
+    const wordRange = document.getWordRangeAtPosition(position, /"[^\n\r\s]+?"/)
     if (!wordRange) {
       return
     }
