@@ -268,19 +268,17 @@ async function provideDefinition(
   const fileName = basename(filepath)
   const handler = strategy[fileName]
   if (handler) {
-    // https://github.com/dword-design/package-name-regex/blob/master/src/index.js
-    const packageNameRegex = /(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*/;
-    const pkgNameRange = document.getWordRangeAtPosition(position, packageNameRegex)
-    if (!pkgNameRange) {
+    const wordRange = document.getWordRangeAtPosition(position, /"[^\n\r\s]+?"/)
+    if (!wordRange) {
       return
     }
 
     const stringRange = new Range(
-      pkgNameRange.start.translate(0, 1),
-      pkgNameRange.end.translate(0, -1)
+      wordRange.start.translate(0, 1),
+      wordRange.end.translate(0, -1)
     )
     const fullString = document.getText(stringRange)
-    let pkgName = document.getText(pkgNameRange);
+    let pkgName = fullString
     if (/^node_modules\//.test(pkgName)) {
       pkgName = pkgName.slice(
         pkgName.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1
