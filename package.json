@@ -222,14 +222,15 @@
   },
   "husky": {
     "hooks": {
+      "pre-commit": "lint-staged",
       "commit-msg": "commitlint -x @commitlint/config-conventional -e"
     }
   },
   "lint-staged": {
     "*.{js,ts}": [
-      "npm run eslint:fix",
-      "npm run format-imports",
-      "npm run prettier"
+      "npx eslint --config ./.eslintrc.js",
+      "npx format-imports --config ./import-sorter.json",
+      "prettier --config ./.prettierrc.js --write"
     ]
   },
   "bugs": {
