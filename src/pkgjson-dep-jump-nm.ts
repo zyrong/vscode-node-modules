@@ -268,10 +268,8 @@ async function provideDefinition(
   const fileName = basename(filepath)
   const handler = strategy[fileName]
   if (handler) {
-    // https://github.com/dword-design/package-name-regex/blob/master/src/index.js
-    const packageNameRegex = /(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*/;
-    const pkgNameRange = document.getWordRangeAtPosition(position, packageNameRegex)
-    if (!pkgNameRange) {
+    const wordRange = document.getWordRangeAtPosition(position, /"[^\n\r\s]+?"/)
+    if (!wordRange) {
       return
     }
 
