@@ -17,6 +17,10 @@ _config.yml
 **/*.ts
 **/package-lock.json
 
+# ignore because we use esbuild to bundle all dependencies to single file
+node_modules
+!node_modules/node-gyp
+
 **/.github/**
 node_modules/**/.*
 node_modules/**/@types/**
@@ -26,5 +30,4 @@ node_modules/**/LICENSE
 node_modules/**/license
 node_modules/**/README.md
 node_modules/**/readme.md
-node_modules/**/CHANGELOG.md
 

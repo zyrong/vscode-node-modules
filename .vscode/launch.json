@@ -16,7 +16,7 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}" // 调试会话启动前要运行的任务, ${defaultBuildTask}指向.vscode/tasks.json中配置的默认任务
+			"preLaunchTask": "preRunExtension" // 调试会话启动前要运行的任务
 		},
 		{
 			"name": "Extension Tests",
@@ -31,7 +31,7 @@
 			"outFiles": [
 				"${workspaceFolder}/out/test/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			"preLaunchTask": "preTestExtension"
 		}
 	]
 }

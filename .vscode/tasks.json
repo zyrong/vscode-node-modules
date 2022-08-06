@@ -4,17 +4,24 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "preRunExtension",
 			"type": "npm",
-			"script": "watch",
-			"problemMatcher": "$tsc-watch",
+			"script": "esbuild-watch",
 			"isBackground": true,
+			"problemMatcher": "$esbuild-watch",
 			"presentation": {
 				"reveal": "never"
-			},
-			"group": {
-				"kind": "build",
-				"isDefault": true // 标记为默认任务
 			}
-		}
+		},
+		{
+			"label": "preTestExtension",
+			"type": "npm",
+			"script": "test-compile",
+			"isBackground": true,
+			"problemMatcher": "$esbuild",
+			"presentation": {
+				"reveal": "never"
+			}
+		},
 	]
 }
