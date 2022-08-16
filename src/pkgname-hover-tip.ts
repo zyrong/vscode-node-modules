@@ -248,20 +248,25 @@ export class HoverTip implements HoverProvider {
 
   astCache = new TTLCache<
     string,
-    { ast: BabelAst | undefined; integrity: string }
+    { ast: BabelAst | undefined; integrity: string; isUpperPart: boolean }
   >({ ttl: 1000 * 60 * 10 })
   parseJs(jscode: string, document: TextDocument, position: Position) {
     const filepath = document.uri.fsPath
     let cacheValue = this.astCache.get(filepath)
-    const latestIntegrity = SHA512(jscode).toString()
+
+    const nextLinePosition = new Position(position.line + 1, 0)
+    const nextLineoffset = document.offsetAt(nextLinePosition)
+    let upperPartText = jscode.slice(0, nextLineoffset)
+
+    let latestIntegrity: string = cacheValue
+        ? cacheValue.isUpperPart
+          ? SHA512(upperPartText).toString()
+          : SHA512(jscode).toString()
+        : '',
+      isUpperPart = false
 
     if (!cacheValue || latestIntegrity !== cacheValue.integrity) {
       let newAst
-
-      const nextLinePosition = new Position(position.line + 1, 0)
-      const nextLineoffset = document.offsetAt(nextLinePosition)
-
-      let upperPartText = jscode.slice(0, nextLineoffset)
 
       const parserOptions: ParserOptions = {
         sourceType: 'module',
@@ -273,11 +278,15 @@ export class HoverTip implements HoverProvider {
 
       try {
         newAst = parse(upperPartText, parserOptions)
+        isUpperPart = true
       } catch (err) {
         try {
           // 如果使用upperPartText优化，当遇到代码中非顶层的动态import或require的情况会很容易导致paser解析失败！
           // 尝试对整个code生成ast 或者 可以考虑不支持非顶层的动态import或require提示。
           newAst = parse(jscode, parserOptions)
+          isUpperPart = false
+          cacheValue?.isUpperPart &&
+            (latestIntegrity = SHA512(jscode).toString())
         } catch (err: any) {
           logger.error('Parse JsCode Error', err)
           return
@@ -289,6 +298,7 @@ export class HoverTip implements HoverProvider {
         (cacheValue = {
           ast: newAst,
           integrity: latestIntegrity,
+          isUpperPart,
         })
       )
     }
