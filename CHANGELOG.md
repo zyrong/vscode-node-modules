@@ -2,13 +2,6 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [1.5.1](https://github.com/zyrong/vscode-node-modules/compare/v1.5.0...v1.5.1) (2022-08-16)
-
-
-### Bug Fixes
-
-* make sure to get the word range between double quotes ([a5dd7fe](https://github.com/zyrong/vscode-node-modules/commit/a5dd7fefbe9277603dab1e78ca197010671b1875)), closes [#6](https://github.com/zyrong/vscode-node-modules/issues/6)
-
 ## [1.5.0](https://github.com/zyrong/vscode-node-modules/compare/v1.4.2...v1.5.0) (2022-08-02)
 
 
