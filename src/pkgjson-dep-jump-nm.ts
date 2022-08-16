@@ -8,18 +8,19 @@ import validate from 'validate-npm-package-name'
 import {
   CancellationToken,
   Definition,
+  DefinitionLink,
   ExtensionContext,
   languages,
   LocationLink,
   Position,
   Range,
   TextDocument,
+  Uri,
   window,
 } from 'vscode'
 
 import { logger } from './extension'
 import { NODE_MODULES, PACKAGE_JSON } from './types'
-import { genFileLocation } from './utils/index'
 import t from './utils/localize'
 import { findPkgPath } from './utils/pkg'
 import { getFileInProjectRootDir } from './vs-utils'
@@ -265,7 +266,7 @@ async function provideDefinition(
   document: TextDocument,
   position: Position,
   token: CancellationToken
-): Promise<Definition | LocationLink[] | null | undefined> {
+): Promise<Definition | DefinitionLink[] | LocationLink[] | null | undefined> {
   const filepath = document.uri.fsPath
   const rootDir = getFileInProjectRootDir(filepath)
   if (!rootDir) {
@@ -328,7 +329,12 @@ async function provideDefinition(
         window.showInformationMessage(t('tip.notFoundPackage'))
         return
       }
-      return genFileLocation(join(pkgPath, PACKAGE_JSON)) // return location，字符串就会变成一个可以点击的链接
+      const definitionLink: DefinitionLink = {
+        originSelectionRange: stringRange,
+        targetUri: Uri.file(join(pkgPath, PACKAGE_JSON)),
+        targetRange: new Range(new Position(0, 0), new Position(0, 0)),
+      }
+      return [definitionLink]
     } catch (err) {
       logger.error('', err)
       return
