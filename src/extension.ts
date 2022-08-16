@@ -1,9 +1,16 @@
 import { commands, ExtensionContext, Uri, window, workspace } from 'vscode'
 
+import { setDebug } from './setting'
 import t from './utils/localize'
+import Logger from './utils/log'
 import { isFile } from './vs-utils'
 
+export const logger = new Logger('node_modules', {
+  levels: ['info', 'warn', 'error'],
+})
+
 export function activate(context: ExtensionContext) {
+  logger.log('activate node_modules Extension')
   import('./pkgjson-dep-jump-nm').then(
     ({ default: packageJsonJumpToNodeModules }) => {
       packageJsonJumpToNodeModules(context)
@@ -45,6 +52,13 @@ export function activate(context: ExtensionContext) {
       }
     )
   )
+
+  setDebug()
+  workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration('node_modules.general.debug')) {
+      setDebug()
+    }
+  })
 }
 
 export function deactivate() {}

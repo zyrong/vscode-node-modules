@@ -1,8 +1,10 @@
+import axios, { AxiosError } from 'axios'
 import { existsSync } from 'fs'
-import got from 'got'
+import LRUCache from 'lru-cache'
 import pacote, { Manifest, ManifestResult } from 'pacote'
 import { dirname, join } from 'path'
 
+import { logger } from '../extension'
 import {
   NODE_MODULES,
   PACKAGE_JSON,
@@ -10,13 +12,7 @@ import {
   T_SUPPORT_PKGMANAGER_NAMES,
 } from '../types'
 import { isFile, parseJsonFile } from '../vs-utils'
-import {
-  error,
-  isFileSync,
-  isRecord,
-  requestDebounce,
-  trimRightSlash,
-} from './'
+import { isFileSync, isRecord, promiseDebounce, trimRightSlash } from './'
 
 type DepsOffsetRange = {
   peerDependencies?: number[]
@@ -136,15 +132,16 @@ export type PkgJsonInfo = {
   bugs?: string | { url?: string }
 } & { lastUpdate?: number }
 
-const pacoteManifest = requestDebounce(
+const pacoteManifest = promiseDebounce(
   pacote.manifest,
   (pkgNameAndRangeVersion: string) => {
     return pkgNameAndRangeVersion
   }
 )
-const remotePkgJsonInfoCache: {
-  [pkgNameAndRangeVersion: string]: PkgJsonInfo | undefined
-} = {}
+const remotePkgJsonInfoCache = new LRUCache<string, PkgJsonInfo>({
+  max: 100,
+  ttl: 1000 * 60 * 10,
+})
 export async function getPkgJsonInfo(
   pkgName: string,
   pkgJsonPath: string | undefined,
@@ -173,7 +170,7 @@ export async function getPkgJsonInfo(
       const pkgNameAndRangeVersion = `${pkgName}${
         rangeVersion ? '@' + rangeVersion : ''
       }`
-      if (!remotePkgJsonInfoCache[pkgNameAndRangeVersion]) {
+      if (!remotePkgJsonInfoCache.has(pkgNameAndRangeVersion)) {
         const pkgJson = (await pacoteManifest(pkgNameAndRangeVersion, {
           fullMetadata: true,
         })) as unknown as Manifest & ManifestResult
@@ -182,19 +179,15 @@ export async function getPkgJsonInfo(
           result.homepage = pkgJson.homepage
           result.repository = pkgJson.repository
           result.bugs = pkgJson.bugs
-          remotePkgJsonInfoCache[pkgNameAndRangeVersion] = result
-          setTimeout(() => {
-            remotePkgJsonInfoCache[pkgNameAndRangeVersion] = undefined
-          }, 1000 * 60 * 10)
+          remotePkgJsonInfoCache.set(pkgNameAndRangeVersion, result)
         }
       } else {
-        result = remotePkgJsonInfoCache[pkgNameAndRangeVersion]!
+        result = remotePkgJsonInfoCache.get(pkgNameAndRangeVersion)!
       }
     }
   }
 
   if (!result.version) {
-    error(`Failed to get ${pkgName} package info`)
     return
   } else {
     return result
@@ -213,19 +206,21 @@ export type PackageInfo = {
   }
 } & { lastPkgJsonInfoUpdate?: number }
 
-const getBundlephobiaApiSize = requestDebounce(
-  (
-    pkgNameAndVersion: string
-  ): Promise<{ gzip: number; size: number } | undefined> => {
-    return got
-      .get(`https://bundlephobia.com/api/size?package=${pkgNameAndVersion}`)
-      .json()
+const getBundlephobiaApiSize = promiseDebounce(
+  (pkgNameAndVersion: string) => {
+    return axios.get<{ gzip?: number; size?: number }>(
+      `https://bundlephobia.com/api/size?package=${pkgNameAndVersion}`,
+      {
+        timeout: 5000,
+      }
+    )
   },
   (pkgNameAndVersion: string) => pkgNameAndVersion
 )
-const pkgInfoCache: {
-  [pkgNameAndVersion: string]: PackageInfo | undefined
-} = {}
+const pkgInfoCache = new LRUCache<string, PackageInfo>({
+  max: 100,
+  ttl: 1000 * 60 * 10,
+})
 export async function getPackageInfo(pkgJsonInfo: PkgJsonInfo) {
   const extractUrl = (
     val: string | { url?: string | undefined } | undefined
@@ -238,7 +233,7 @@ export async function getPackageInfo(pkgJsonInfo: PkgJsonInfo) {
   }
 
   const pkgNameAndVersion = pkgJsonInfo.name + '@' + pkgJsonInfo.version
-  const pkgInfo = pkgInfoCache[pkgNameAndVersion]
+  const pkgInfo = pkgInfoCache.get(pkgNameAndVersion)
   if (!pkgInfo) {
     let pkgInfo: PackageInfo = {
       name: pkgJsonInfo.name,
@@ -249,17 +244,23 @@ export async function getPackageInfo(pkgJsonInfo: PkgJsonInfo) {
     }
 
     try {
-      const sizeInfo = await getBundlephobiaApiSize(pkgNameAndVersion)
-      if (sizeInfo) {
+      const { data: sizeInfo } = await getBundlephobiaApiSize(pkgNameAndVersion)
+      if (sizeInfo && typeof sizeInfo.size === 'number') {
         pkgInfo.webpackBundleSize = {
-          gzip: sizeInfo.gzip,
+          gzip: sizeInfo.gzip!,
           normal: sizeInfo.size,
         }
       }
     } catch (err) {
-      console.error(err)
+      if (err instanceof AxiosError) {
+        logger.error(
+          `\nAxios ${err.name} \nCode: ${err.code} \nMessage: ${err.message} \nURL: ${err.config.url}`
+        )
+      } else {
+        logger.error('', err)
+      }
     }
-    pkgInfoCache[pkgNameAndVersion] = pkgInfo
+    pkgInfoCache.set(pkgNameAndVersion, pkgInfo)
   } else if (pkgInfo.lastPkgJsonInfoUpdate !== pkgJsonInfo.lastUpdate) {
     // forcaUpdatePkgJsonInfo
     pkgInfo.lastPkgJsonInfoUpdate = pkgJsonInfo.lastUpdate
@@ -268,5 +269,5 @@ export async function getPackageInfo(pkgJsonInfo: PkgJsonInfo) {
     pkgInfo.bugsUrl = extractUrl(pkgJsonInfo.bugs)
   }
 
-  return pkgInfoCache[pkgNameAndVersion]
+  return pkgInfoCache.get(pkgNameAndVersion)!
 }

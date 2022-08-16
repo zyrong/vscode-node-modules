@@ -1,5 +1,5 @@
 import { statSync } from 'fs'
-import { Location, Position, Uri, window } from 'vscode'
+import { Location, Position, Uri } from 'vscode'
 
 export function isFileSync(path: string): Boolean {
   try {
@@ -36,19 +36,11 @@ export const genFileLocation = (
   return new Location(Uri.file(destPath), new Position(line, character))
 }
 
-export const error = (function () {
-  const output = window.createOutputChannel('node_modules')
-  return function (msg: string, err?: any) {
-    output.appendLine(`[Error]: ${msg}. \n${err}\n`)
-    // console.error(`[node_modules extension]: ${msg}. \n${err}`);
-  }
-})()
-
 export function isRecord(target: any): target is Record<string, any> {
   return target !== null && typeof target === 'object'
 }
 
-export function requestDebounce<T extends any[], R>(
+export function promiseDebounce<T extends any[], R>(
   fn: (...args: T) => Promise<R>,
   getKey: (...args: any[]) => any
 ) {

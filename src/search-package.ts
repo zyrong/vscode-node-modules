@@ -3,8 +3,8 @@ import { basename, join } from 'path'
 import validate = require('validate-npm-package-name')
 import { Uri, window, workspace } from 'vscode'
 
+import { logger } from './extension'
 import { NODE_MODULES, PACKAGE_JSON } from './types'
-import { error } from './utils'
 import t from './utils/localize'
 import { getFileInProjectRootDir } from './vs-utils'
 import showPickWorkspaceFolder from './vs-utils/showPickWorkspaceFolder'
@@ -75,7 +75,7 @@ async function getNodeModulesPkgNameList(node_modulesPath: string) {
     const fullPkgNameList = fullOrganizePkgList.concat(pkgList)
     return fullPkgNameList
   } catch (err) {
-    error(`读取${node_modulesPath}目录失败`, err)
+    logger.error(`读取${node_modulesPath}目录失败`, err)
     return [] as string[]
   }
 }
@@ -119,7 +119,7 @@ async function searchNodeModules(node_modulesPath: string) {
         userPickPath = join(pnpmOtherPkgNode_modules, pickResult)
         await access(userPickPath)
       } catch (err) {
-        error(`路径不存在:${userPickPath}`, err)
+        logger.error(`路径不存在:${userPickPath}`, err)
       }
     }
 

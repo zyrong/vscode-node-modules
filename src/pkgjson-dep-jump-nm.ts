@@ -1,7 +1,9 @@
+import TTLCache from '@isaacs/ttlcache'
 import { CodeRange, isSimpleNode, parse, Visitor } from '@zyrong/json-parser'
 import { ComplexNode, NodeType } from '@zyrong/json-parser/dist/node'
 import SHA512 from 'crypto-js/sha512'
 import { basename, dirname, join } from 'path'
+import { performance } from 'perf_hooks'
 import validate from 'validate-npm-package-name'
 import {
   CancellationToken,
@@ -15,8 +17,9 @@ import {
   window,
 } from 'vscode'
 
+import { logger } from './extension'
 import { NODE_MODULES, PACKAGE_JSON } from './types'
-import { error, genFileLocation } from './utils/index'
+import { genFileLocation } from './utils/index'
 import t from './utils/localize'
 import { findPkgPath } from './utils/pkg'
 import { getFileInProjectRootDir } from './vs-utils'
@@ -226,25 +229,30 @@ type HandlerArgs = {
   filepath: string
 }
 
-const caches: {
-  [filepath: string]: { visitor: Visitor | null; integrity: string }
-} = {}
-function getJsonVisitor(filepath: string, json: string) {
-  let cache = caches[filepath]
+const jsonParseCache = new TTLCache<
+  string,
+  { visitor: Visitor | null; integrity: string }
+>({ ttl: 1000 * 60 * 10 })
+function parseJson(filepath: string, json: string) {
+  let cacheValue = jsonParseCache.get(filepath)
   const latestIntegrity = SHA512(json).toString()
 
-  if (cache) {
-    if (latestIntegrity !== cache.integrity) {
-      cache.integrity = latestIntegrity
-      cache.visitor = parse(json)
-    }
-  } else {
-    cache = caches[filepath] = {
-      visitor: parse(json),
-      integrity: latestIntegrity,
+  if (!cacheValue || latestIntegrity !== cacheValue.integrity) {
+    try {
+      const visitor = parse(json)
+      jsonParseCache.set(
+        filepath,
+        (cacheValue = {
+          visitor,
+          integrity: latestIntegrity,
+        })
+      )
+    } catch (err) {
+      logger.error('Parse Json Error', err)
+      return
     }
   }
-  return cache.visitor
+  return cacheValue.visitor
 }
 const strategy = {
   'package.json': packageJsonHandler,
@@ -261,7 +269,7 @@ async function provideDefinition(
   const filepath = document.uri.fsPath
   const rootDir = getFileInProjectRootDir(filepath)
   if (!rootDir) {
-    error('Failed to find project root directory')
+    logger.error('Failed to find project root directory')
     return
   }
 
@@ -288,14 +296,18 @@ async function provideDefinition(
       return
     }
 
+    logger.debug(`----------- Emit PackageName Jump -----------`)
+
     const json = document.getText()
     // const line = document.lineAt(position);
     // line.text // 光标行对应的那行文本内容
     try {
-      const visitor = getJsonVisitor(filepath, json)
+      const startTime = performance.now()
+      const visitor = parseJson(filepath, json)
       if (!visitor) {
         return
       }
+      logger.debug(`Parse Json Time: ${performance.now() - startTime}`)
 
       const startOffset = document.offsetAt(stringRange.start),
         endOffset = document.offsetAt(stringRange.end)
@@ -318,7 +330,7 @@ async function provideDefinition(
       }
       return genFileLocation(join(pkgPath, PACKAGE_JSON)) // return location，字符串就会变成一个可以点击的链接
     } catch (err) {
-      console.error(err)
+      logger.error('', err)
       return
     }
   }

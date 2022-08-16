@@ -15,5 +15,7 @@
   "walkthrough.start.searchNode_modules.title":"搜索 node_modules",
   "walkthrough.start.searchNode_modules.description":"在弹出的菜单中，点击搜索 node_modules，可以对node_modules进行路径搜索。\n[Search node_modules](command:extension.search.node_modules)",
   "walkthrough.start.hoverPackageName.title":"悬停 PackageName",
-  "walkthrough.start.hoverPackageName.description":"在`.ts` `.js` `.jsx` `.tsx` `.vue`文件中导入package，鼠标移动到`PackageName`上，将会得到相关提示。"
+  "walkthrough.start.hoverPackageName.description":"在`.ts` `.js` `.jsx` `.tsx` `.vue`文件中导入package，鼠标移动到`PackageName`上，将会得到相关提示。",
+  "configuration.general": "常规",
+  "configuration.general.debug.markdownDescription": "在输出视图中打印调试信息."
 }

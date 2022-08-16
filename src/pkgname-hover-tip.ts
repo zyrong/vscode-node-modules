@@ -1,4 +1,4 @@
-import { parse, ParserOptions } from '@babel/parser'
+import { parse, ParseResult, ParserOptions } from '@babel/parser'
 import traverse from '@babel/traverse'
 import {
   isIdentifier,
@@ -6,9 +6,12 @@ import {
   isStringLiteral,
   isTSExternalModuleReference,
 } from '@babel/types'
+import TTLCache from '@isaacs/ttlcache'
+import SHA512 from 'crypto-js/sha512'
 import hostedGitInfo from 'hosted-git-info'
 import isBuiltinModule from 'is-builtin-module'
 import { join } from 'path'
+import { performance } from 'perf_hooks'
 import validate from 'validate-npm-package-name'
 import {
   CancellationToken,
@@ -25,8 +28,9 @@ import {
   Uri,
 } from 'vscode'
 
+import { logger } from './extension'
 import { PACKAGE_JSON } from './types'
-import { error, trimLeftSlash } from './utils'
+import { trimLeftSlash } from './utils'
 import {
   findPkgPath,
   getPackageInfo,
@@ -35,6 +39,8 @@ import {
 } from './utils/pkg'
 import { getFileInProjectRootDir } from './vs-utils'
 import { forMatSize } from './vs-utils/util'
+
+type BabelAst = ParseResult<import('@babel/types').File>
 
 function inRange(
   range: { start?: number | null; end?: number | null },
@@ -103,6 +109,13 @@ export class HoverTip implements HoverProvider {
     position: Position,
     token: CancellationToken
   ): ProviderResult<Hover> {
+    const filepath = document.uri.fsPath
+    const rootDir = getFileInProjectRootDir(filepath)
+    if (!rootDir) {
+      logger.error('Failed to find project root directory')
+      return
+    }
+
     const range = document.getWordRangeAtPosition(position)
     if (!range) {
       return
@@ -121,7 +134,7 @@ export class HoverTip implements HoverProvider {
 
     const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/)
     if (!pkgNameMatch) {
-      error('pkgname match error')
+      logger.error('pkgname match error')
       return
     }
     const pkgName = pkgNameMatch[1]
@@ -130,11 +143,76 @@ export class HoverTip implements HoverProvider {
       return
     }
 
-    const nextLinePosition = new Position(position.line + 1, 0)
-    const nextLineoffset = document.offsetAt(nextLinePosition)
-    let jscode = document.getText()
+    logger.debug(`----------- Emit PkgName Hover Tip -----------`)
 
-    let offset = document.offsetAt(position)
+    const { jscode, positionOffset } =
+      this.getJsCodeAndPositionOffset(document, position) || {}
+    if (!(jscode && positionOffset)) {
+      return
+    }
+    let startTime = performance.now()
+    const ast = this.parseJs(jscode, document, position)
+    if (!ast) {
+      return
+    }
+    logger.debug(`Parse JsCode Time: ${performance.now() - startTime}`)
+
+    if (!this.positionIsImported(positionOffset, ast)) {
+      logger.debug(`Not Import`)
+      return
+    }
+
+    logger.debug(`Matched Package Name: "${pkgName}"`)
+
+    return new Promise(async (resolve, reject) => {
+      const isNodeBuiltinModule = isBuiltinModule(pkgName)
+      let contents: MarkdownString | undefined
+      if (isNodeBuiltinModule) {
+        logger.debug(`[isNodeBuiltinModule]`)
+        contents = this.generateTipMarkdown(pkgName, true)
+      } else {
+        let pkgJsonPath: string | undefined
+        const pkgPath = findPkgPath(pkgName, document.uri.path, rootDir)
+        if (pkgPath) {
+          pkgJsonPath = join(pkgPath, PACKAGE_JSON)
+          logger.debug(`FindLocalPackagePath: "${pkgPath}"`)
+        } else {
+          logger.debug(`[NotFindLocalPackagePath]`)
+        }
+        startTime = performance.now()
+        const pkgJson = await (!token.isCancellationRequested &&
+          getPkgJsonInfo(pkgName, pkgJsonPath, rootDir))
+        if (pkgJson) {
+          logger.debug(
+            `Get "${pkgName}" PackageJsonInfo Time: ${
+              performance.now() - startTime
+            }`
+          )
+          startTime = performance.now()
+          const pkgInfo = await (!token.isCancellationRequested &&
+            getPackageInfo(pkgJson))
+          if (pkgInfo) {
+            logger.debug(
+              `Get "${pkgName}" PackageInfo Time: ${
+                performance.now() - startTime
+              }`
+            )
+            contents = this.generateTipMarkdown(pkgName, pkgInfo, pkgJsonPath)
+          } else {
+            logger.debug(`Get "${pkgName}" PackageInfo Failure`)
+          }
+        } else {
+          logger.debug(`Get "${pkgName}" PackageJsonInfo Failure`)
+        }
+      }
+      contents ? resolve(new Hover(contents)) : reject()
+    })
+  }
+
+  getJsCodeAndPositionOffset(document: TextDocument, position: Position) {
+    let jscode = document.getText()
+    let positionOffset = document.offsetAt(position)
+
     if (document.languageId === 'vue') {
       const startScriptIdx = jscode.indexOf('<script')
       const endScriptIdx = jscode.lastIndexOf('</script')
@@ -142,7 +220,7 @@ export class HoverTip implements HoverProvider {
       if (startScriptIdx !== -1 && endScriptIdx !== -1) {
         const startScriptLabelRegex = /<script.*?>/
         let scriptRangeCode = jscode.slice(startScriptIdx, endScriptIdx)
-        offset -= startScriptIdx // 同步offset与code的关系
+        positionOffset -= startScriptIdx // 同步offset与code的关系
         const matchFullStartScriptLabel = scriptRangeCode.match(
           startScriptLabelRegex
         )
@@ -150,32 +228,41 @@ export class HoverTip implements HoverProvider {
           scriptRangeCode = scriptRangeCode.slice(
             matchFullStartScriptLabel[0].length
           )
-          offset -= matchFullStartScriptLabel[0].length
+          positionOffset -= matchFullStartScriptLabel[0].length
           jscode = scriptRangeCode
         } else {
-          error('match vue <script> error')
+          logger.error('match vue <script> error')
           return
         }
       } else {
-        error('not found <script>')
+        logger.error('not found <script>')
         return
       }
     }
-    let upperPartText = jscode.slice(0, nextLineoffset)
 
-    // 正则匹配，可能存在想不到的情况，暂时不考虑，例如: code = "import a from 'xxx'" // 一个包含import的字符串
-    // const pkgname = 'xxx'
-    // const pkgnameRegex = new RegExp(`['"]${pkgname}['"]`).source
-    // const import_export_from_Regex = new RegExp(`(?:import|export)[^'";]+from\\s*${pkgnameRegex}`)
-    // const onlyImportRegex = new RegExp(`import\\s*${pkgnameRegex}`)
-    // const dynamic_import_require_Regex = new RegExp(`(?:import|require)\\s*\\(\\s*${pkgnameRegex}\\s*\\)`)
-    // const finalImportRegex = new RegExp(`${import_export_from_Regex.source}|${onlyImportRegex.source}|${dynamic_import_require_Regex.source}`)
+    return {
+      jscode,
+      positionOffset,
+    }
+  }
 
-    // 检查是否以下导入import、export、require()、import()
-    let isImportPkg = false
+  astCache = new TTLCache<
+    string,
+    { ast: BabelAst | undefined; integrity: string }
+  >({ ttl: 1000 * 60 * 10 })
+  parseJs(jscode: string, document: TextDocument, position: Position) {
+    const filepath = document.uri.fsPath
+    let cacheValue = this.astCache.get(filepath)
+    const latestIntegrity = SHA512(jscode).toString()
 
-    try {
-      let ast
+    if (!cacheValue || latestIntegrity !== cacheValue.integrity) {
+      let newAst
+
+      const nextLinePosition = new Position(position.line + 1, 0)
+      const nextLineoffset = document.offsetAt(nextLinePosition)
+
+      let upperPartText = jscode.slice(0, nextLineoffset)
+
       const parserOptions: ParserOptions = {
         sourceType: 'module',
         ranges: false,
@@ -183,19 +270,44 @@ export class HoverTip implements HoverProvider {
         errorRecovery: true, // 兼容部分 upperPartText 存在截取错误情况
         plugins: ['typescript'],
       }
+
       try {
-        ast = parse(upperPartText, parserOptions)
+        newAst = parse(upperPartText, parserOptions)
       } catch (err) {
         try {
           // 如果使用upperPartText优化，当遇到代码中非顶层的动态import或require的情况会很容易导致paser解析失败！
           // 尝试对整个code生成ast 或者 可以考虑不支持非顶层的动态import或require提示。
-          ast = parse(jscode, parserOptions)
+          newAst = parse(jscode, parserOptions)
         } catch (err: any) {
-          error(err)
+          logger.error('Parse JsCode Error', err)
           return
         }
       }
 
+      this.astCache.set(
+        filepath,
+        (cacheValue = {
+          ast: newAst,
+          integrity: latestIntegrity,
+        })
+      )
+    }
+
+    return cacheValue.ast
+  }
+
+  positionIsImported(positionOffset: number, ast: BabelAst) {
+    let isImportPkg = false
+    try {
+      // 正则匹配，可能存在想不到的情况，暂时不考虑，例如: code = "import a from 'xxx'" // 一个包含import的字符串
+      // const pkgname = 'xxx'
+      // const pkgnameRegex = new RegExp(`['"]${pkgname}['"]`).source
+      // const import_export_from_Regex = new RegExp(`(?:import|export)[^'";]+from\\s*${pkgnameRegex}`)
+      // const onlyImportRegex = new RegExp(`import\\s*${pkgnameRegex}`)
+      // const dynamic_import_require_Regex = new RegExp(`(?:import|require)\\s*\\(\\s*${pkgnameRegex}\\s*\\)`)
+      // const finalImportRegex = new RegExp(`${import_export_from_Regex.source}|${onlyImportRegex.source}|${dynamic_import_require_Regex.source}`)
+
+      // 检查是否以下导入import、export、require()、import()
       traverse(ast, {
         CallExpression(path) {
           const { callee, arguments: arguments_ } = path.node
@@ -205,7 +317,7 @@ export class HoverTip implements HoverProvider {
             arguments_.length === 1
           ) {
             const arg1 = arguments_[0]
-            if (isStringLiteral(arg1) && inRange(arg1, offset)) {
+            if (isStringLiteral(arg1) && inRange(arg1, positionOffset)) {
               isImportPkg = true
               path.stop()
             }
@@ -213,14 +325,14 @@ export class HoverTip implements HoverProvider {
         },
         ImportDeclaration(path) {
           const { source } = path.node
-          if (inRange(source, offset)) {
+          if (inRange(source, positionOffset)) {
             isImportPkg = true
             path.stop()
           }
         },
         ExportNamedDeclaration(path) {
           const { source } = path.node
-          if (isStringLiteral(source) && inRange(source, offset)) {
+          if (isStringLiteral(source) && inRange(source, positionOffset)) {
             isImportPkg = true
             path.stop()
           }
@@ -228,7 +340,7 @@ export class HoverTip implements HoverProvider {
         TSImportEqualsDeclaration(path) {
           if (
             isTSExternalModuleReference(path.node.moduleReference) &&
-            inRange(path.node.moduleReference.expression, offset)
+            inRange(path.node.moduleReference.expression, positionOffset)
           ) {
             isImportPkg = true
             path.stop()
@@ -236,41 +348,10 @@ export class HoverTip implements HoverProvider {
         },
       })
     } catch (err: any) {
-      error(err)
-      return
+      logger.error(err)
     }
 
-    if (!isImportPkg) {
-      return
-    }
-
-    const rootDir = getFileInProjectRootDir(document.uri.path)
-    if (!rootDir) {
-      error('寻找项目根目录失败')
-      return
-    }
-
-    return new Promise(async (resolve, reject) => {
-      const isNodeBuiltinModule = isBuiltinModule(pkgName)
-      let contents: MarkdownString | undefined
-      if (isNodeBuiltinModule) {
-        contents = this.generateTipMarkdown(pkgName, true)
-      } else {
-        let pkgJsonPath: string | undefined
-        const pkgPath = findPkgPath(pkgName, document.uri.path, rootDir)
-        pkgPath && (pkgJsonPath = join(pkgPath, PACKAGE_JSON))
-        const pkgJson = await (!token.isCancellationRequested &&
-          getPkgJsonInfo(pkgName, pkgJsonPath, rootDir))
-        if (pkgJson) {
-          const pkgInfo = await (!token.isCancellationRequested &&
-            getPackageInfo(pkgJson))
-          if (pkgInfo) {
-            contents = this.generateTipMarkdown(pkgName, pkgInfo, pkgJsonPath)
-          }
-        }
-      }
-      contents ? resolve(new Hover(contents)) : reject()
-    })
+    return isImportPkg
   }
 
   generateTipMarkdown(
@@ -313,9 +394,7 @@ export class HoverTip implements HoverProvider {
             result = gitInfo.https({ noGitPlus: true, noCommittish: true })
           }
         }
-        if (result && /\.git$/.test(result)) {
-          result = result.slice(0, -4)
-        }
+        result && (result = result.replace(/\.git$/, ''))
         return result
       }
 
