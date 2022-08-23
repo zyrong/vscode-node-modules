@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.2](https://github.com/zyrong/vscode-node-modules/compare/v1.5.1...v1.5.2) (2022-08-23)
+
+
+### Bug Fixes
+
+* package.json jump to definition hover range ([b4c6afe](https://github.com/zyrong/vscode-node-modules/commit/b4c6afec31ae3a60934c029d88c86c1761684253))
+
 ### [1.5.1](https://github.com/zyrong/vscode-node-modules/compare/v1.5.0...v1.5.1) (2022-08-16)
 
 
