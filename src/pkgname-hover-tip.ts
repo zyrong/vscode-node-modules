@@ -127,17 +127,12 @@ export class HoverTip implements HoverProvider {
 
     const fullPkgPath = getLineTextQuotaBetweenString(document, position, range)
 
-    // 排除相对路径
-    if (!fullPkgPath || fullPkgPath[0] === '.') {
+    // 排除相对和绝对路径导入语句
+    if (!fullPkgPath || fullPkgPath[0] === '.' || fullPkgPath[0] === '/') {
       return
     }
 
-    const pkgNameMatch = fullPkgPath.match(/((?:@.+?\/)?[^@/]+)/)
-    if (!pkgNameMatch) {
-      logger.error('pkgname match error')
-      return
-    }
-    const pkgName = pkgNameMatch[1]
+    const pkgName = fullPkgPath
 
     if (!validate(pkgName).validForOldPackages) {
       return
