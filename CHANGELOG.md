@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.3](https://github.com/zyrong/vscode-node-modules/compare/v1.5.2...v1.5.3) (2022-09-20)
+
+
+### Bug Fixes
+
+* hoverTip match packageName error ([0529853](https://github.com/zyrong/vscode-node-modules/commit/052985396c03298a91cbe6d5b9a626cf4f3b460b)), closes [#17](https://github.com/zyrong/vscode-node-modules/issues/17)
+
 ### [1.5.2](https://github.com/zyrong/vscode-node-modules/compare/v1.5.1...v1.5.2) (2022-08-23)
 
 
