@@ -1,5 +1,6 @@
 import { statSync } from 'fs'
-import { Location, Position, Uri } from 'vscode'
+import { readFile } from 'fs/promises'
+import { Location, Position, Range, Uri } from 'vscode'
 
 export function isFileSync(path: string): Boolean {
   try {
@@ -56,4 +57,17 @@ export function promiseDebounce<T extends any[], R>(
     }
     return promises.get(key)!
   }
+}
+
+export async function getFileRange(filePath: string) {
+  const textContent = await readFile(filePath, 'utf8')
+  const lines = textContent.split(/\r?\n/)
+  const lastLine = lines.at(-1)
+  return new Range(
+    new Position(0, 0),
+    new Position(
+      Math.max(0, lines.length - 1),
+      lastLine === undefined ? 0 : Math.max(0, lastLine.length - 1)
+    )
+  )
 }

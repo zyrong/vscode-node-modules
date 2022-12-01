@@ -21,6 +21,7 @@ import {
 
 import { logger } from './extension'
 import { NODE_MODULES, PACKAGE_JSON } from './types'
+import { getFileRange } from './utils'
 import t from './utils/localize'
 import { findPkgPath } from './utils/pkg'
 import { getFileInProjectRootDir } from './vs-utils'
@@ -282,11 +283,11 @@ async function provideDefinition(
       return
     }
 
-    const stringRange = new Range(
+    const originSelectionRange = new Range(
       wordRange.start.translate(0, 1),
       wordRange.end.translate(0, -1)
     )
-    const fullString = document.getText(stringRange)
+    const fullString = document.getText(originSelectionRange)
     let pkgName = fullString
     if (/^node_modules\//.test(pkgName)) {
       pkgName = pkgName.slice(
@@ -310,8 +311,8 @@ async function provideDefinition(
       }
       logger.debug(`Parse Json Time: ${performance.now() - startTime}`)
 
-      const startOffset = document.offsetAt(stringRange.start),
-        endOffset = document.offsetAt(stringRange.end)
+      const startOffset = document.offsetAt(originSelectionRange.start),
+        endOffset = document.offsetAt(originSelectionRange.end)
       const fullStringRange = { start: startOffset, end: endOffset }
       const startPath = handler({
         visitor,
@@ -329,10 +330,12 @@ async function provideDefinition(
         window.showInformationMessage(t('tip.notFoundPackage'))
         return
       }
+      const targetUri = Uri.file(join(pkgPath, PACKAGE_JSON))
+      const targetRange = await getFileRange(targetUri.fsPath)
       const definitionLink: DefinitionLink = {
-        originSelectionRange: stringRange,
-        targetUri: Uri.file(join(pkgPath, PACKAGE_JSON)),
-        targetRange: new Range(new Position(0, 0), new Position(0, 0)),
+        originSelectionRange,
+        targetUri,
+        targetRange,
       }
       return [definitionLink]
     } catch (err) {
