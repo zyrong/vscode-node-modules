@@ -164,7 +164,7 @@
             "when": "workspaceFolderCount > 0",
             "description": "%walkthrough.start.pkgjson_dep_definition.description%",
             "media": {
-              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/1.gif",
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/resources/images/goToDefine.gif",
               "altText": ""
             }
           },
@@ -177,7 +177,7 @@
             "when": "workspaceFolderCount > 0",
             "description": "%walkthrough.start.searchPackage.description%",
             "media": {
-              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/2.gif",
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/resources/images/search-package.gif",
               "altText": ""
             }
           },
@@ -190,7 +190,7 @@
             "when": "workspaceFolderCount > 0",
             "description": "%walkthrough.start.searchNode_modules.description%",
             "media": {
-              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/3.gif",
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/resources/images/search-node_modules.gif",
               "altText": ""
             }
           },
@@ -203,7 +203,20 @@
             "when": "workspaceFolderCount > 0",
             "description": "%walkthrough.start.hoverPackageName.description%",
             "media": {
-              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/docs/4.gif",
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/resources/images/hover-import-pkgname.gif",
+              "altText": ""
+            }
+          },
+          {
+            "id": "copy realPath",
+            "title": "%walkthrough.start.copyRealPath.title%",
+            "completionEvents": [
+              "onStepSelected"
+            ],
+            "when": "workspaceFolderCount > 0",
+            "description": "%walkthrough.start.copyRealPath.description%",
+            "media": {
+              "image": "https://raw.githubusercontent.com/zyrong/vscode-node-modules/master/resources/images/copyRealPath.gif",
               "altText": ""
             }
           }

@@ -18,6 +18,8 @@
   "walkthrough.start.searchNode_modules.description": "In the pop-up menu, click the search node_modules to search the node_modules path.\n[Search node_modules](command:extension.search.node_modules)",
   "walkthrough.start.hoverPackageName.title": "Hover PackageName",
   "walkthrough.start.hoverPackageName.description": "Import the package in `.ts` `.jsx` `.tsx` `.vue` file, move the mouse over the `PackageName`, You will get relevant tips.",
+  "walkthrough.start.copyRealPath.title": "Copy Real Path",
+  "walkthrough.start.copyRealPath.description": "Copy the real path corresponding to the symbolic link",
   "configuration.general": "General",
   "configuration.general.debug.markdownDescription": "Print debug information in output view.",
   "configuration.hovers": "Hovers",
