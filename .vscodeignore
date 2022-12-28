@@ -3,6 +3,7 @@
 docs/**
 src/**
 out/test/**
+resources/images
 
 vsc-extension-quickstart.md
 _config.yml

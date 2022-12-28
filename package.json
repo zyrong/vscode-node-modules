@@ -225,16 +225,15 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --format=cjs --platform=node --external:vscode --external:node-gyp",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "test-compile": "tsc -p ./",
     "pretest": "rimraf ./out/test && npm run test-compile && npm run lint",
     "test": "node ./out/test/runTest.js",
-    "lint": "eslint src --ext ts",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
     "release-version": "standard-version",
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
     "build": "vsce package",
     "eslint:fix": "eslint ./src --config ./.eslintrc.js --fix --ext .js,.ts",
     "prettier": "prettier --config ./.prettierrc.js --write \"./src/**/*.{js,ts}\"",
