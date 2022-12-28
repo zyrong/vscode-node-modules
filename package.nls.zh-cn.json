@@ -1,6 +1,8 @@
 {
   "cmd.SearchPackage": "搜索 Package",
   "cmd.Searchnm":"搜索 node_modules",
+  "cmd.copyRealPath": "复制 实际路径",
+  "cmd.copyRelativeRealPath": "复制 相对实际路径",
   "tip.workspaceNoOpenProject":"当前工作区没有打开项目",
   "tip.selectSearchProject":"请选择要搜索node_modules的项目",
   "tip.notFoundPackage":"找不到对应的package，可能还未安装？",
@@ -17,5 +19,15 @@
   "walkthrough.start.hoverPackageName.title":"悬停 PackageName",
   "walkthrough.start.hoverPackageName.description":"在`.ts` `.js` `.jsx` `.tsx` `.vue`文件中导入package，鼠标移动到`PackageName`上，将会得到相关提示。",
   "configuration.general": "常规",
-  "configuration.general.debug.markdownDescription": "在输出视图中打印调试信息."
+  "configuration.general.debug.markdownDescription": "在输出视图中打印调试信息.",
+  "configuration.hovers": "悬停",
+  "configuration.hovers.pkgName.bundleSize": "控制悬停包名称时是否显示捆绑包大小.  （提示: 开启后，悬停提示加载会变慢, 具体取决于网络, 如果发现悬停提示加载速度慢的情况下建议关闭.)",
+  "configuration.resolve": "Resolve",
+  "configuration.resolve.preserveSymlinks": "启用时，使用符号链接路径，而不是实际路径",
+  "text.currentFilePath": "当前文件路径",
+  "text.enterPath":"手动输入路径",
+  "text.selectPathSource":"选择路径来源",
+  "text.placeHolderSelectPathSource":"请选择要转换的路径来源",
+  "text.placeHolderEnterPath":"请输入要转换的路径",
+  "text.pathError":"路径错误"
 }

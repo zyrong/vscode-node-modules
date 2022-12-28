@@ -1,18 +1,14 @@
-import axios, { AxiosError } from 'axios'
-import { existsSync } from 'fs'
-import LRUCache from 'lru-cache'
-import pacote, { Manifest, ManifestResult } from 'pacote'
 import { dirname, join } from 'path'
 
-import { logger } from '../extension'
 import {
   NODE_MODULES,
   PACKAGE_JSON,
   SUPPORT_PKGMANAGER_NAMES,
   T_SUPPORT_PKGMANAGER_NAMES,
-} from '../types'
-import { isFile, parseJsonFile } from '../vs-utils'
-import { isFileSync, isRecord, promiseDebounce, trimRightSlash } from './'
+} from '../constant'
+import { configs } from '../extension-configs'
+import { exists, isFile, parseJsonFile, realpath } from '../vs-utils'
+import { isObject, trimRightSlash } from './'
 
 type DepsOffsetRange = {
   peerDependencies?: number[]
@@ -20,9 +16,7 @@ type DepsOffsetRange = {
   devDependencies?: number[]
 }
 // 获取deps字符范围
-export const getDepsOffsetRange = function (
-  packageJson: string
-): DepsOffsetRange {
+function getDepsOffsetRange(packageJson: string): DepsOffsetRange {
   // match deps range string
   // /(?<="(?:peerDependencies|dependencies|devDependencies)"[^\{]*?\{)[^\}]*([\s\S]*?)[^\}]*/g
   const regex = /"(peerDependencies|dependencies|devDependencies)"\s*:\s*\{/g
@@ -42,7 +36,7 @@ export const getDepsOffsetRange = function (
   return result
 }
 
-export async function detectCurrentUsePkgManager(projectRootDir: string) {
+async function detectCurrentUsePkgManager(projectRootDir: string) {
   const pkgjsonPath = join(projectRootDir, PACKAGE_JSON)
   const pkgJson = await parseJsonFile(pkgjsonPath)
   let result: 'npm' | 'yarn' | 'pnpm' | undefined
@@ -82,29 +76,37 @@ export async function detectCurrentUsePkgManager(projectRootDir: string) {
   return result
 }
 
-export function findPkgPath(
-  pkgName: string,
+async function maybeRealpath(path: string) {
+  if (configs.resolve.preserveSymlinks === false) {
+    return realpath(path)
+  } else {
+    return path
+  }
+}
+
+async function findPackagePath(
+  packageName: string,
   startPath: string,
   endPath: string
 ) {
-  const isOrganizePkg = pkgName.startsWith('@')
-  const pkgNamePath = isOrganizePkg ? pkgName.split('/') : [pkgName]
+  // const isOrganizePkg = packageName.startsWith('@')
   // 从package.json所在目录的node_modules寻找，直到根目录的node_modules停止。
-  let currentDirPath = startPath
-  if (isFileSync(startPath)) {
-    currentDirPath = dirname(currentDirPath)
-  }
-  if (/node_modules\/?$/.test(currentDirPath)) {
-    currentDirPath = dirname(currentDirPath)
-  }
-  currentDirPath = trimRightSlash(currentDirPath)
+  startPath = trimRightSlash(startPath)
   endPath = trimRightSlash(endPath)
+  if (await isFile(startPath)) {
+    startPath = dirname(startPath)
+  }
+  let currentDirPath = startPath
   let end = false
   let destPath: string = ''
   do {
-    destPath = join(currentDirPath, NODE_MODULES, ...pkgNamePath)
-    if (existsSync(destPath)) {
-      return destPath
+    const realP = await maybeRealpath(currentDirPath)
+    if (realP) {
+      currentDirPath = realP
+      destPath = join(currentDirPath, NODE_MODULES, packageName)
+      if (await exists(destPath)) {
+        return destPath
+      }
     }
     end = endPath === currentDirPath || !currentDirPath
     currentDirPath = dirname(currentDirPath)
@@ -112,11 +114,11 @@ export function findPkgPath(
   return undefined
 }
 
-export function getPkgVersionFromPkgJson(
+function getPkgVersionFromPkgJson(
   pkgName: string,
   pkgJson: any
 ): string | undefined {
-  if (isRecord(pkgJson)) {
+  if (isObject(pkgJson)) {
     return (
       (pkgJson.dependencies && pkgJson.dependencies[pkgName]) ||
       (pkgJson.devDependencies && pkgJson.devDependencies[pkgName])
@@ -124,150 +126,9 @@ export function getPkgVersionFromPkgJson(
   }
 }
 
-export type PkgJsonInfo = {
-  name: string
-  version: string
-  homepage?: string | { url?: string }
-  repository?: string | { url?: string }
-  bugs?: string | { url?: string }
-} & { lastUpdate?: number }
-
-const pacoteManifest = promiseDebounce(
-  pacote.manifest,
-  (pkgNameAndRangeVersion: string) => {
-    return pkgNameAndRangeVersion
-  }
-)
-const remotePkgJsonInfoCache = new LRUCache<string, PkgJsonInfo>({
-  max: 100,
-  ttl: 1000 * 60 * 10,
-})
-export async function getPkgJsonInfo(
-  pkgName: string,
-  pkgJsonPath: string | undefined,
-  rootDir: string
-) {
-  let result = {
-    name: pkgName,
-  } as PkgJsonInfo
-  let localPkgJson: PkgJsonInfo | undefined
-  if (pkgJsonPath) {
-    localPkgJson = (await parseJsonFile(pkgJsonPath)) as any
-    if (isRecord(localPkgJson)) {
-      result.version = localPkgJson.version
-      result.homepage = localPkgJson.homepage
-      result.repository = localPkgJson.repository
-      result.bugs = localPkgJson.bugs
-      result.lastUpdate = Date.now()
-    }
-  }
-
-  if (!localPkgJson) {
-    const rootPkgJsonPath = join(rootDir, PACKAGE_JSON)
-    const rootDirPkgJson = await parseJsonFile(rootPkgJsonPath)
-    if (rootDirPkgJson) {
-      const rangeVersion = getPkgVersionFromPkgJson(pkgName, rootDirPkgJson)
-      const pkgNameAndRangeVersion = `${pkgName}${
-        rangeVersion ? '@' + rangeVersion : ''
-      }`
-      if (!remotePkgJsonInfoCache.has(pkgNameAndRangeVersion)) {
-        const pkgJson = (await pacoteManifest(pkgNameAndRangeVersion, {
-          fullMetadata: true,
-        })) as unknown as Manifest & ManifestResult
-        if (isRecord(pkgJson)) {
-          result.version = pkgJson.version
-          result.homepage = pkgJson.homepage
-          result.repository = pkgJson.repository
-          result.bugs = pkgJson.bugs
-          remotePkgJsonInfoCache.set(pkgNameAndRangeVersion, result)
-        }
-      } else {
-        result = remotePkgJsonInfoCache.get(pkgNameAndRangeVersion)!
-      }
-    }
-  }
-
-  if (!result.version) {
-    return
-  } else {
-    return result
-  }
-}
-
-export type PackageInfo = {
-  name: string
-  version: string
-  homepageUrl?: string
-  repositoryUrl?: string
-  bugsUrl?: string
-  webpackBundleSize?: {
-    normal: number
-    gzip: number
-  }
-} & { lastPkgJsonInfoUpdate?: number }
-
-const getBundlephobiaApiSize = promiseDebounce(
-  (pkgNameAndVersion: string) => {
-    return axios.get<{ gzip?: number; size?: number }>(
-      `https://bundlephobia.com/api/size?package=${pkgNameAndVersion}`,
-      {
-        timeout: 5000,
-      }
-    )
-  },
-  (pkgNameAndVersion: string) => pkgNameAndVersion
-)
-const pkgInfoCache = new LRUCache<string, PackageInfo>({
-  max: 100,
-  ttl: 1000 * 60 * 10,
-})
-export async function getPackageInfo(pkgJsonInfo: PkgJsonInfo) {
-  const extractUrl = (
-    val: string | { url?: string | undefined } | undefined
-  ) => {
-    if (typeof val === 'string') {
-      return val
-    } else if (isRecord(val) && typeof val.url === 'string') {
-      return val.url
-    }
-  }
-
-  const pkgNameAndVersion = pkgJsonInfo.name + '@' + pkgJsonInfo.version
-  const pkgInfo = pkgInfoCache.get(pkgNameAndVersion)
-  if (!pkgInfo) {
-    let pkgInfo: PackageInfo = {
-      name: pkgJsonInfo.name,
-      version: pkgJsonInfo.version,
-      homepageUrl: extractUrl(pkgJsonInfo.homepage),
-      repositoryUrl: extractUrl(pkgJsonInfo.repository),
-      bugsUrl: extractUrl(pkgJsonInfo.bugs),
-    }
-
-    try {
-      const { data: sizeInfo } = await getBundlephobiaApiSize(pkgNameAndVersion)
-      if (sizeInfo && typeof sizeInfo.size === 'number') {
-        pkgInfo.webpackBundleSize = {
-          gzip: sizeInfo.gzip!,
-          normal: sizeInfo.size,
-        }
-      }
-    } catch (err) {
-      if (err instanceof AxiosError) {
-        logger.error(
-          `\nAxios ${err.name} \nCode: ${err.code} \nMessage: ${err.message} \nURL: ${err.config.url}`
-        )
-      } else {
-        logger.error('', err)
-      }
-    }
-    pkgInfoCache.set(pkgNameAndVersion, pkgInfo)
-  } else if (pkgInfo.lastPkgJsonInfoUpdate !== pkgJsonInfo.lastUpdate) {
-    // forcaUpdatePkgJsonInfo
-    pkgInfo.lastPkgJsonInfoUpdate = pkgJsonInfo.lastUpdate
-    pkgInfo.homepageUrl = extractUrl(pkgJsonInfo.homepage)
-    pkgInfo.repositoryUrl = extractUrl(pkgJsonInfo.repository)
-    pkgInfo.bugsUrl = extractUrl(pkgJsonInfo.bugs)
-  }
-
-  return pkgInfoCache.get(pkgNameAndVersion)!
+export {
+  detectCurrentUsePkgManager,
+  findPackagePath,
+  getDepsOffsetRange,
+  getPkgVersionFromPkgJson,
 }

@@ -1,5 +1,6 @@
 import { statSync } from 'fs'
 import { readFile } from 'fs/promises'
+import { forOwn } from 'lodash'
 import { Location, Position, Range, Uri } from 'vscode'
 
 export function isFileSync(path: string): Boolean {
@@ -37,7 +38,7 @@ export const genFileLocation = (
   return new Location(Uri.file(destPath), new Position(line, character))
 }
 
-export function isRecord(target: any): target is Record<string, any> {
+export function isObject(target: any): target is Record<string, any> {
   return target !== null && typeof target === 'object'
 }
 
@@ -70,4 +71,38 @@ export async function getFileRange(filePath: string) {
       lastLine === undefined ? 0 : Math.max(0, lastLine.length - 1)
     )
   )
+}
+
+export function spacing(num: number) {
+  let result = ''
+  while (--num >= 0) {
+    result += '&nbsp;'
+  }
+  return result
+}
+
+export function forOwnDeep(
+  object: Record<any, any>,
+  iteratee: (
+    value: any,
+    key: string,
+    parentObject: any,
+    parentKeyPath: string
+  ) => false | void,
+  parentValue: Record<any, any> = object,
+  parentKeyPath = ''
+) {
+  forOwn(object, (value, key) => {
+    if (iteratee(value, key, parentValue, parentKeyPath) === false) {
+      return false
+    }
+    if (isObject(value)) {
+      forOwnDeep(
+        value,
+        iteratee,
+        value,
+        (parentKeyPath && parentKeyPath + '.') + key
+      )
+    }
+  })
 }

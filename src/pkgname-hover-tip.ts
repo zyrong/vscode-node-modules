@@ -8,37 +8,29 @@ import {
 } from '@babel/types'
 import TTLCache from '@isaacs/ttlcache'
 import SHA512 from 'crypto-js/sha512'
-import hostedGitInfo from 'hosted-git-info'
-import isBuiltinModule from 'is-builtin-module'
 import { join } from 'path'
 import { performance } from 'perf_hooks'
 import validate from 'validate-npm-package-name'
 import {
   CancellationToken,
-  env,
   ExtensionContext,
   Hover,
   HoverProvider,
   languages,
-  MarkdownString,
   Position,
   ProviderResult,
   Range,
   TextDocument,
-  Uri,
 } from 'vscode'
 
+import { PACKAGE_JSON } from './constant'
 import { logger } from './extension'
-import { PACKAGE_JSON } from './types'
-import { trimLeftSlash } from './utils'
-import {
-  findPkgPath,
-  getPackageInfo,
-  getPkgJsonInfo,
-  PackageInfo,
-} from './utils/pkg'
-import { getFileInProjectRootDir } from './vs-utils'
-import { forMatSize } from './vs-utils/util'
+import { configs } from './extension-configs'
+import { findPackagePath, getPkgVersionFromPkgJson } from './utils/pkg'
+import { getPkgHoverContentsCreator } from './utils/pkg-hover-contents'
+import { getPackageInfo } from './utils/pkg-info'
+import { getWorkspaceFolderPathByPath } from './vs-utils'
+import { parseJsonFile } from './vs-utils/util'
 
 type BabelAst = ParseResult<import('@babel/types').File>
 
@@ -47,14 +39,6 @@ function inRange(
   val: number
 ) {
   return range.start && range.end && val >= range.start && val <= range.end
-}
-
-function getSpaceString(num: number) {
-  let result = ''
-  while (--num >= 0) {
-    result += '&nbsp;'
-  }
-  return result
 }
 
 function findQuota(text: string, eachNum: number, start: number, step: number) {
@@ -110,9 +94,9 @@ export class HoverTip implements HoverProvider {
     token: CancellationToken
   ): ProviderResult<Hover> {
     const filepath = document.uri.fsPath
-    const rootDir = getFileInProjectRootDir(filepath)
-    if (!rootDir) {
-      logger.error('Failed to find project root directory')
+    const wsFolderPath = getWorkspaceFolderPathByPath(filepath)
+    if (!wsFolderPath) {
+      logger.error('Failed to find workspace folder')
       return
     }
 
@@ -132,13 +116,13 @@ export class HoverTip implements HoverProvider {
       return
     }
 
-    const pkgName = fullPkgPath
+    const packageName = fullPkgPath
 
-    if (!validate(pkgName).validForOldPackages) {
+    if (!validate(packageName).validForOldPackages) {
       return
     }
 
-    logger.debug(`----------- Emit PkgName Hover Tip -----------`)
+    logger.debug(`----------- Emit PackageName Hover Tip -----------`)
 
     const { jscode, positionOffset } =
       this.getJsCodeAndPositionOffset(document, position) || {}
@@ -157,50 +141,54 @@ export class HoverTip implements HoverProvider {
       return
     }
 
-    logger.debug(`Matched Package Name: "${pkgName}"`)
+    logger.debug(`Matched Package Name: "${packageName}"`)
 
     return new Promise(async (resolve, reject) => {
-      const isNodeBuiltinModule = isBuiltinModule(pkgName)
-      let contents: MarkdownString | undefined
-      if (isNodeBuiltinModule) {
-        logger.debug(`[isNodeBuiltinModule]`)
-        contents = this.generateTipMarkdown(pkgName, true)
-      } else {
-        let pkgJsonPath: string | undefined
-        const pkgPath = findPkgPath(pkgName, document.uri.path, rootDir)
-        if (pkgPath) {
-          pkgJsonPath = join(pkgPath, PACKAGE_JSON)
-          logger.debug(`FindLocalPackagePath: "${pkgPath}"`)
+      try {
+        const packageInstalledPath = await findPackagePath(
+          packageName,
+          document.uri.path,
+          wsFolderPath
+        )
+        let packageVersionRange: string | undefined
+        if (packageInstalledPath) {
+          logger.debug(`FindPackageInstalledPath: "${packageInstalledPath}"`)
         } else {
-          logger.debug(`[NotFindLocalPackagePath]`)
+          logger.debug(`[NotFindPackageInstalledPath]`)
+          const rootPkgJsonPath = join(wsFolderPath, PACKAGE_JSON)
+          const rootDirPkgJson = await parseJsonFile(rootPkgJsonPath)
+          packageVersionRange = getPkgVersionFromPkgJson(
+            packageName,
+            rootDirPkgJson
+          )
         }
+
         startTime = performance.now()
-        const pkgJson = await (!token.isCancellationRequested &&
-          getPkgJsonInfo(pkgName, pkgJsonPath, rootDir))
-        if (pkgJson) {
+        const packageInfo = await getPackageInfo(packageName, {
+          packageInstalledPath,
+          searchVersionRange: packageVersionRange,
+          fetchBundleSize: configs.hovers.pkgName.bundleSize,
+          token,
+          skipBuiltinModuleCheck: !!packageVersionRange, // 如果pkgJson的deps字段中存在packageName，那么就认为不是使用node内置模块
+        })
+        if (packageInfo) {
           logger.debug(
-            `Get "${pkgName}" PackageJsonInfo Time: ${
+            `Get "${packageName}" PackageInfo Time: ${
               performance.now() - startTime
             }`
           )
-          startTime = performance.now()
-          const pkgInfo = await (!token.isCancellationRequested &&
-            getPackageInfo(pkgJson))
-          if (pkgInfo) {
-            logger.debug(
-              `Get "${pkgName}" PackageInfo Time: ${
-                performance.now() - startTime
-              }`
-            )
-            contents = this.generateTipMarkdown(pkgName, pkgInfo, pkgJsonPath)
-          } else {
-            logger.debug(`Get "${pkgName}" PackageInfo Failure`)
-          }
+          const pkgHoverContentsCreator = getPkgHoverContentsCreator()
+          const hoverContents = pkgHoverContentsCreator.generate(packageInfo)
+          resolve(new Hover(hoverContents))
         } else {
-          logger.debug(`Get "${pkgName}" PackageJsonInfo Failure`)
+          logger.debug(`Get "${packageName}" PackageInfo Failure`)
+          reject()
         }
+      } catch (err: any) {
+        reject()
+        const isErrMsg = typeof err === 'string'
+        isErrMsg ? logger.error(err) : logger.error('', err)
       }
-      contents ? resolve(new Hover(contents)) : reject()
     })
   }
 
@@ -357,113 +345,6 @@ export class HoverTip implements HoverProvider {
     }
 
     return isImportPkg
-  }
-
-  generateTipMarkdown(
-    pkgName: string,
-    isNodeBuiltinModule: true
-  ): MarkdownString
-  generateTipMarkdown(
-    pkgName: string,
-    packageInfo: PackageInfo,
-    pkgJsonPath: string | undefined
-  ): MarkdownString
-  generateTipMarkdown(
-    pkgName: string,
-    arg: true | PackageInfo,
-    pkgJsonPath?: string | undefined
-  ): MarkdownString {
-    let isNodeBuiltinModule = false
-    let markdown = '',
-      homepageUrl: string | undefined,
-      repositoryUrl: string | undefined,
-      pkgVersion = '',
-      sizeInfo = ''
-    if (typeof arg === 'boolean') {
-      homepageUrl = `https://nodejs.org/${env.language}/`
-      repositoryUrl = 'https://github.com/nodejs/node'
-      isNodeBuiltinModule = true
-    } else {
-      const packageInfo = arg
-      pkgVersion = packageInfo.version
-      homepageUrl = packageInfo.homepageUrl
-      repositoryUrl = packageInfo.repositoryUrl
-
-      function extractGitUrl(url: string) {
-        let result: string | undefined
-        if (/^https?:\/\/.*/i.test(url)) {
-          result = url
-        } else {
-          const gitInfo = hostedGitInfo.fromUrl(trimLeftSlash(url))
-          if (gitInfo) {
-            result = gitInfo.https({ noGitPlus: true, noCommittish: true })
-          }
-        }
-        result && (result = result.replace(/\.git$/, ''))
-        return result
-      }
-
-      if (repositoryUrl) {
-        repositoryUrl = extractGitUrl(repositoryUrl)
-      }
-      if (!repositoryUrl && packageInfo.bugsUrl) {
-        let bugsUrl = packageInfo.bugsUrl
-        const idx = bugsUrl.indexOf('/issues')
-        if (idx !== -1) {
-          bugsUrl = bugsUrl.slice(0, idx)
-        }
-        repositoryUrl = extractGitUrl(bugsUrl)
-      }
-
-      if (repositoryUrl === homepageUrl) {
-        homepageUrl = undefined
-      }
-
-      if (packageInfo.webpackBundleSize) {
-        sizeInfo = `BundleSize:${getSpaceString(3)}${forMatSize(
-          packageInfo.webpackBundleSize.normal
-        )}${getSpaceString(3)}(gzip:${getSpaceString(1)}${forMatSize(
-          packageInfo.webpackBundleSize.gzip
-        )})`
-      }
-    }
-
-    let pkgnameMarkdown = ''
-    if (isNodeBuiltinModule) {
-      pkgnameMarkdown = `\`${pkgName}\``
-    } else {
-      pkgnameMarkdown = `\`${pkgName}${pkgVersion ? '@' + pkgVersion : ''}\``
-      if (pkgJsonPath) {
-        // command uri: https://liiked.github.io/VS-Code-Extension-Doc-ZH/#/extension-guides/command?id=%e5%91%bd%e4%bb%a4%e7%9a%84urls
-        const showTextDocumentCmdUri = Uri.parse(
-          `command:extension.show.textDocument?${encodeURIComponent(
-            `"${pkgJsonPath}"`
-          )}`
-        )
-        pkgnameMarkdown = `[${pkgnameMarkdown}](${showTextDocumentCmdUri})`
-      }
-    }
-    markdown += `<span style="color:#569CD6;">${pkgnameMarkdown}</span>${getSpaceString(
-      2
-    )}`
-    if (!isNodeBuiltinModule) {
-      markdown += `[NPM](https://www.npmjs.com/package/${pkgName}${
-        pkgVersion ? '/v/' + pkgVersion : ''
-      })${getSpaceString(4)}`
-    }
-    if (homepageUrl) {
-      markdown += `[HomePage](${homepageUrl})${getSpaceString(4)}`
-    }
-    if (repositoryUrl) {
-      markdown += `[Repository](${repositoryUrl})${getSpaceString(4)}`
-    }
-    if (sizeInfo) {
-      markdown += `<br/>${sizeInfo}`
-    }
-    const contents = new MarkdownString(markdown)
-    contents.isTrusted = true
-    contents.supportHtml = true
-    return contents
   }
 }
 

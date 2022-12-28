@@ -1,6 +1,8 @@
 {
   "cmd.SearchPackage": "Search Package",
   "cmd.Searchnm": "Search node_modules",
+  "cmd.copyRealPath": "Copy Real Path",
+  "cmd.copyRelativeRealPath": "Copy Relative Real Path",
   "tip.workspaceNoOpenProject": "The current workspace does not have an open project",
   "tip.selectSearchProject": "Please select the node_modules project to search",
   "tip.notFoundPackage": "The corresponding package cannot be found. It may not be installed yet?",
@@ -17,5 +19,15 @@
   "walkthrough.start.hoverPackageName.title": "Hover PackageName",
   "walkthrough.start.hoverPackageName.description": "Import the package in `.ts` `.jsx` `.tsx` `.vue` file, move the mouse over the `PackageName`, You will get relevant tips.",
   "configuration.general": "General",
-  "configuration.general.debug.markdownDescription": "Print debug information in output view."
+  "configuration.general.debug.markdownDescription": "Print debug information in output view.",
+  "configuration.hovers": "Hovers",
+  "configuration.hovers.pkgName.bundleSize": "Controls whether the bundle size is displayed when hovering the package name.  (Note: After the hover prompt is enabled, the loading will slow down, depends on the network environment. If the hover prompt is found to be slow, it is recommended to disable it.)",
+  "configuration.resolve": "Resolve",
+  "configuration.resolve.preserveSymlinks": "When on, use symbolic link paths instead of actual paths",
+  "text.currentFilePath": "Current file path",
+  "text.enterPath":"Enter path manually",
+  "text.selectPathSource":"Select path source",
+  "text.placeHolderSelectPathSource":"Please select the path source to convert",
+  "text.placeHolderEnterPath":"Please enter the path to convert",
+  "text.pathError":"Path error"
 }

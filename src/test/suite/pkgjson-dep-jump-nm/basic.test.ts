@@ -19,7 +19,7 @@ import {
   NODE_MODULES,
   PACKAGE_JSON,
   PACKAGE_LOCK_JSON,
-} from '../../../types'
+} from '../../../constant'
 import { getWorkSpacePath } from '../util'
 
 function closeAllEditors() {
@@ -151,31 +151,26 @@ suite('pkgjson-dep-jump-nm package.json Test', function () {
       'dependencies',
       'devDependencies',
       'peerDependencies',
-      'bundleDependencies',
       'optionalDependencies',
       'resolutions',
       'overrides',
       'dependenciesMeta',
       'peerDependenciesMeta',
     ]
-    const testKeyPathList = needTestFieldNames.map((name) => {
-      return name + '.' + pkgName
-    })
-    await testKeyPathList
-      .reduce((chain, keyPath) => {
-        return chain.then(() => {
-          return goToDefinition(document, visitor, keyPath, pkgName)
-        })
-      }, Promise.resolve())
-      .then(() => {
-        return goToDefinition(
-          document,
-          visitor,
-          'bundledDependencies.0',
-          pkgName,
-          { isValue: true }
-        )
+    const testKeyPathList: Array<[string, boolean]> = needTestFieldNames.map(
+      (name) => {
+        return [name + '.' + pkgName, false]
+      }
+    )
+    testKeyPathList.push(
+      ['bundledDependencies.0', true],
+      ['bundleDependencies.0', true]
+    )
+    await testKeyPathList.reduce((chain, [keyPath, isValue]) => {
+      return chain.then(() => {
+        return goToDefinition(document, visitor, keyPath, pkgName, { isValue })
       })
+    }, Promise.resolve())
   })
 
   test('@scope/test Jump', async function (): Promise<void> {

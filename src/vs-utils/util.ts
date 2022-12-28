@@ -1,5 +1,5 @@
 import { constants } from 'fs'
-import { access, readFile, stat } from 'fs/promises'
+import { access, readFile, realpath as realpathFS, stat } from 'fs/promises'
 import { workspace } from 'vscode'
 
 export async function isFile(path: string): Promise<boolean> {
@@ -18,7 +18,7 @@ export async function isDirectory(path: string): Promise<boolean> {
   }
 }
 
-export async function existFile(path: string): Promise<boolean> {
+export async function exists(path: string): Promise<boolean> {
   try {
     await access(path, constants.F_OK)
     return true
@@ -28,9 +28,9 @@ export async function existFile(path: string): Promise<boolean> {
 }
 
 // 获取文件所在工作空间的根目录
-export function getFileInProjectRootDir(filepath: string): string | undefined {
+export function getWorkspaceFolderPathByPath(path: string): string | undefined {
   const project = workspace.workspaceFolders?.find((project) => {
-    return filepath.startsWith(project.uri.path)
+    return path.startsWith(project.uri.path)
   })
   return project?.uri.path
 }
@@ -48,7 +48,7 @@ export async function parseJsonFile(
   }
 }
 
-export function forMatSize(byteSize: number, decimal = 2): string {
+export function formatSize(byteSize: number, decimal = 2): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   let i = 0
   for (; i < units.length; i++) {
@@ -58,4 +58,8 @@ export function forMatSize(byteSize: number, decimal = 2): string {
     byteSize /= 1024
   }
   return byteSize.toFixed(decimal) + units[i]
+}
+
+export function realpath(path: string) {
+  return realpathFS(path).catch(() => '')
 }

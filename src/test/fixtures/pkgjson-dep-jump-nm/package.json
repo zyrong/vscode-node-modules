@@ -17,9 +17,9 @@
   "bundledDependencies": [
     "basic-test"
   ],
-  "bundleDependencies": {
-    "basic-test": true
-  },
+  "bundleDependencies": [
+    "basic-test"
+  ],
   "optionalDependencies": {
     "basic-test": "^4.17.21"
   },

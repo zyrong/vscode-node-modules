@@ -1,10 +1,5 @@
-import TTLCache from '@isaacs/ttlcache'
-import { CodeRange, isSimpleNode, parse, Visitor } from '@zyrong/json-parser'
-import { ComplexNode, NodeType } from '@zyrong/json-parser/dist/node'
-import SHA512 from 'crypto-js/sha512'
-import { basename, dirname, join } from 'path'
-import { performance } from 'perf_hooks'
-import validate from 'validate-npm-package-name'
+/* eslint-disable @typescript-eslint/naming-convention */
+import { join } from 'path'
 import {
   CancellationToken,
   Definition,
@@ -13,335 +8,42 @@ import {
   languages,
   LocationLink,
   Position,
-  Range,
   TextDocument,
   Uri,
   window,
 } from 'vscode'
 
+import { PACKAGE_JSON } from './constant'
 import { logger } from './extension'
-import { NODE_MODULES, PACKAGE_JSON } from './types'
 import { getFileRange } from './utils'
 import t from './utils/localize'
-import { findPkgPath } from './utils/pkg'
-import { getFileInProjectRootDir } from './vs-utils'
-
-function aContainB(a: CodeRange, b: CodeRange) {
-  return a.start <= b.start && a.end >= b.end
-}
-
-function findKeyStringNode(node: ComplexNode, keyString: string) {
-  if (node.type !== 'object') {
-    return
-  }
-  return node.properties.find((item) => {
-    return item.key === keyString
-  })
-}
-
-function findOverridesPkgNameNode(
-  node: ComplexNode,
-  pkgName: string,
-  pkgNameRange: CodeRange
-): NodeType | undefined {
-  for (let i = 0; i < node.properties.length; i++) {
-    const pkgName_node = node.properties[i]
-    if (
-      pkgName_node.keyRange &&
-      aContainB(pkgName_node.keyRange, pkgNameRange) &&
-      pkgName_node.key === pkgName
-    ) {
-      return pkgName_node
-    } else if (
-      pkgName_node.type === 'object' &&
-      aContainB(pkgName_node.valueRange, pkgNameRange)
-    ) {
-      return findOverridesPkgNameNode(pkgName_node, pkgName, pkgNameRange)
-    }
-  }
-}
-
-function findPkgNameNodeInPkgJson(
-  pkgJsonNode: NodeType,
-  pkgName: string,
-  pkgNameRange: CodeRange
-): NodeType | undefined {
-  const possiblyKey = [
-    'dependencies',
-    'devDependencies',
-    'peerDependencies',
-    'bundledDependencies',
-    'bundleDependencies',
-    'optionalDependencies',
-    'resolutions',
-    'overrides',
-    'dependenciesMeta',
-    'peerDependenciesMeta',
-  ]
-  if (pkgJsonNode && pkgJsonNode.type === 'object') {
-    for (let i = 0; i < pkgJsonNode.properties.length; i++) {
-      const node = pkgJsonNode.properties[i]
-      const idx = possiblyKey.indexOf(node.key as string)
-      if (idx !== -1) {
-        if (aContainB(node.valueRange, pkgNameRange)) {
-          if (node.type === 'object') {
-            if (possiblyKey[idx] === 'overrides') {
-              return findOverridesPkgNameNode(node, pkgName, pkgNameRange)
-            } else {
-              return findKeyStringNode(node, pkgName)
-            }
-          } else if (
-            node.type === 'array' &&
-            ['bundledDependencies', 'bundleDependencies'].includes(
-              possiblyKey[idx]
-            )
-          ) {
-            return node.properties.find((item) => {
-              if (isSimpleNode(item) && item.value === pkgName) {
-                return item
-              }
-            })
-          }
-          return
-        } else {
-          possiblyKey.splice(idx, 1)
-        }
-      }
-    }
-  }
-  return undefined
-}
-
-function packageJsonHandler({
-  visitor,
-  fullStringRange,
-  pkgName,
-  filepath,
-}: HandlerArgs): string | undefined {
-  if (!!findPkgNameNodeInPkgJson(visitor.body, pkgName, fullStringRange)) {
-    return filepath
-  }
-}
-
-function packageLockJsonHandler({
-  visitor,
-  fullStringRange,
-  fullString,
-  pkgName,
-  filepath,
-}: HandlerArgs): string | undefined {
-  const dirPath = dirname(filepath)
-
-  const PACKAGES = 'packages'
-  const packages_node = visitor.get(PACKAGES)
-  if (
-    packages_node &&
-    packages_node.type === 'object' &&
-    aContainB(packages_node.valueRange, fullStringRange)
-  ) {
-    if (
-      /^node_modules\//.test(fullString) &&
-      findKeyStringNode(packages_node, fullString)
-    ) {
-      const pkgPath = join(dirPath, fullString)
-      return pkgPath.slice(0, pkgPath.lastIndexOf(NODE_MODULES) - 1)
-    } else {
-      const pkgPathNode = packages_node.properties.find((pkgPathNode) => {
-        if (aContainB(pkgPathNode.valueRange, fullStringRange)) {
-          return !!findPkgNameNodeInPkgJson(
-            pkgPathNode,
-            pkgName,
-            fullStringRange
-          )
-        }
-      })
-      return pkgPathNode ? join(dirPath, pkgPathNode.key as string) : undefined
-    }
-  } else {
-    const DEPENDENCIES = 'dependencies'
-    const REQUIRES = 'requires'
-
-    function findNode(node: NodeType): NodeType | undefined {
-      if (node && node.type === 'object') {
-        for (let i = 0; i < node.properties.length; i++) {
-          const pkgInfo_node = node.properties[i]
-          if (pkgInfo_node.type !== 'object') {
-            continue
-          }
-          if (pkgInfo_node.key === DEPENDENCIES) {
-            const dependencies_node = pkgInfo_node
-            if (aContainB(dependencies_node.valueRange, fullStringRange)) {
-              for (let j = 0; j < dependencies_node.properties.length; j++) {
-                const pkgName_node = dependencies_node.properties[j]
-                if (
-                  pkgName_node.keyRange &&
-                  aContainB(pkgName_node.keyRange, fullStringRange) &&
-                  pkgName_node.key === fullString
-                ) {
-                  return pkgName_node
-                } else if (
-                  aContainB(pkgName_node.valueRange, fullStringRange)
-                ) {
-                  return findNode(pkgName_node)
-                }
-              }
-            }
-          } else if (pkgInfo_node.key === REQUIRES) {
-            const requires_node = pkgInfo_node
-            if (aContainB(requires_node.valueRange, fullStringRange)) {
-              return findKeyStringNode(requires_node, fullString)
-            }
-          }
-        }
-      }
-    }
-    let node: NodeType | undefined | null = findNode(visitor.body)
-    if (node) {
-      const pkgNames = [] as string[]
-      const skipKeys = [REQUIRES, DEPENDENCIES]
-      while ((node = node.parent)) {
-        if (skipKeys.includes(node.key as string)) {
-          continue
-        }
-        node.key && pkgNames.push(node.key as string)
-      }
-      let startPath = join(dirPath, NODE_MODULES)
-      for (let i = pkgNames.length - 1; i >= 0; i--) {
-        startPath = join(startPath, pkgNames[i], NODE_MODULES)
-      }
-      return startPath
-    }
-  }
-}
-function dotPackageLockJsonHandler(args: HandlerArgs): string | undefined {
-  if (/\/node_modules\/\.package-lock\.json$/.test(args.filepath)) {
-    args.filepath = join(
-      args.filepath.slice(0, -'/node_modules/.package-lock.json'.length),
-      PACKAGE_JSON
-    )
-    return packageLockJsonHandler(args)
-  }
-}
-
-type HandlerArgs = {
-  visitor: Visitor
-  fullStringRange: CodeRange
-  fullString: string
-  pkgName: string
-  filepath: string
-}
-
-const jsonParseCache = new TTLCache<
-  string,
-  { visitor: Visitor | null; integrity: string }
->({ ttl: 1000 * 60 * 10 })
-function parseJson(filepath: string, json: string) {
-  let cacheValue = jsonParseCache.get(filepath)
-  const latestIntegrity = SHA512(json).toString()
-
-  if (!cacheValue || latestIntegrity !== cacheValue.integrity) {
-    try {
-      const visitor = parse(json)
-      jsonParseCache.set(
-        filepath,
-        (cacheValue = {
-          visitor,
-          integrity: latestIntegrity,
-        })
-      )
-    } catch (err) {
-      logger.error('Parse Json Error', err)
-      return
-    }
-  }
-  return cacheValue.visitor
-}
-const strategy = {
-  'package.json': packageJsonHandler,
-  'package-lock.json': packageLockJsonHandler,
-  'npm-shrinkwrap.json': packageLockJsonHandler,
-  '.package-lock.json': dotPackageLockJsonHandler,
-} as { [key: string]: (args: HandlerArgs) => string | undefined }
+import { getPackageNodeInfoByDocAndPos } from './utils/pkg-json-node'
 
 async function provideDefinition(
   document: TextDocument,
   position: Position,
   token: CancellationToken
 ): Promise<Definition | DefinitionLink[] | LocationLink[] | null | undefined> {
-  const filepath = document.uri.fsPath
-  const rootDir = getFileInProjectRootDir(filepath)
-  if (!rootDir) {
-    logger.error('Failed to find project root directory')
-    return
-  }
-
-  const fileName = basename(filepath)
-  const handler = strategy[fileName]
-  if (handler) {
-    const wordRange = document.getWordRangeAtPosition(position, /"[^\n\r\s]+?"/)
-    if (!wordRange) {
+  try {
+    const pkgNodeInfo = await getPackageNodeInfoByDocAndPos(document, position)
+    if (!pkgNodeInfo?.packageInstalledPath) {
+      window.showInformationMessage(t('tip.notFoundPackage'))
       return
     }
-
-    const originSelectionRange = new Range(
-      wordRange.start.translate(0, 1),
-      wordRange.end.translate(0, -1)
+    const targetUri = Uri.file(
+      join(pkgNodeInfo.packageInstalledPath, PACKAGE_JSON)
     )
-    const fullString = document.getText(originSelectionRange)
-    let pkgName = fullString
-    if (/^node_modules\//.test(pkgName)) {
-      pkgName = pkgName.slice(
-        pkgName.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1
-      )
+    const targetRange = await getFileRange(targetUri.fsPath) // 设置 peeked editor 显示的文件内容范围
+    const definitionLink: DefinitionLink = {
+      originSelectionRange: pkgNodeInfo.originSelectionRange,
+      targetUri,
+      targetRange,
     }
-    if (!validate(pkgName).validForOldPackages) {
-      return
-    }
-
-    logger.debug(`----------- Emit PackageName Jump -----------`)
-
-    const json = document.getText()
-    // const line = document.lineAt(position);
-    // line.text // 光标行对应的那行文本内容
-    try {
-      const startTime = performance.now()
-      const visitor = parseJson(filepath, json)
-      if (!visitor) {
-        return
-      }
-      logger.debug(`Parse Json Time: ${performance.now() - startTime}`)
-
-      const startOffset = document.offsetAt(originSelectionRange.start),
-        endOffset = document.offsetAt(originSelectionRange.end)
-      const fullStringRange = { start: startOffset, end: endOffset }
-      const startPath = handler({
-        visitor,
-        fullStringRange,
-        fullString,
-        pkgName,
-        filepath,
-      })
-      if (!startPath) {
-        return
-      }
-
-      const pkgPath = findPkgPath(pkgName, startPath, rootDir)
-      if (!pkgPath) {
-        window.showInformationMessage(t('tip.notFoundPackage'))
-        return
-      }
-      const targetUri = Uri.file(join(pkgPath, PACKAGE_JSON))
-      const targetRange = await getFileRange(targetUri.fsPath)
-      const definitionLink: DefinitionLink = {
-        originSelectionRange,
-        targetUri,
-        targetRange,
-      }
-      return [definitionLink]
-    } catch (err) {
-      logger.error('', err)
-      return
-    }
+    return [definitionLink]
+  } catch (err) {
+    const isErrMsg = typeof err === 'string'
+    isErrMsg ? logger.error(err) : logger.error('', err)
+    return
   }
 }
 

@@ -1,9 +1,10 @@
 export { default as showPickWorkspaceFolder } from './showPickWorkspaceFolder'
 export { default as showQuickPickFile } from './showQuickPickFile'
 export {
-  existFile,
-  getFileInProjectRootDir,
+  exists,
+  getWorkspaceFolderPathByPath,
   isDirectory,
   isFile,
   parseJsonFile,
+  realpath,
 } from './util'

@@ -31,7 +31,9 @@
     "onLanguage:typescriptreact",
     "onLanguage:vue",
     "onCommand:extension.search.package",
-    "onCommand:extension.search.node_modules"
+    "onCommand:extension.search.node_modules",
+    "onCommand:extension.copy.realPath",
+    "onCommand:extension.copy.relativeRealPath"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -47,16 +49,52 @@
             "type": "boolean"
           }
         }
+      },
+      {
+        "title": "%configuration.hovers%",
+        "order": 2,
+        "type": "object",
+        "properties": {
+          "node_modules.hovers.pkgName.bundleSize": {
+            "default": true,
+            "markdownDescription": "%configuration.hovers.pkgName.bundleSize%",
+            "type": "boolean"
+          }
+        }
+      },
+      {
+        "title": "%configuration.resolve%",
+        "order": 3,
+        "type": "object",
+        "properties": {
+          "node_modules.resolve.preserveSymlinks": {
+            "default": false,
+            "markdownDescription": "%configuration.resolve.preserveSymlinks%",
+            "type": "boolean"
+          }
+        }
       }
     ],
     "commands": [
       {
         "command": "extension.search.package",
-        "title": "%cmd.SearchPackage%"
+        "title": "%cmd.SearchPackage%",
+        "category": "node_modules"
       },
       {
         "command": "extension.search.node_modules",
-        "title": "%cmd.Searchnm%"
+        "title": "%cmd.Searchnm%",
+        "category": "node_modules"
+      },
+      {
+        "command": "extension.copy.realPath",
+        "title": "%cmd.copyRealPath%",
+        "category": "node_modules"
+      },
+      {
+        "command": "extension.copy.relativeRealPath",
+        "title": "%cmd.copyRelativeRealPath%",
+        "category": "node_modules"
       }
     ],
     "menus": {
@@ -70,6 +108,16 @@
           "when": "resourceFilename == node_modules",
           "command": "extension.search.node_modules",
           "group": "4_search@2"
+        },
+        {
+          "when": "resourcePath =~ \/.*\/node_modules\/.*\/",
+          "command": "extension.copy.realPath",
+          "group": "6_copypath@100"
+        },
+        {
+          "when": "resourcePath =~ \/.*\/node_modules\/.*\/",
+          "command": "extension.copy.relativeRealPath",
+          "group": "6_copypath@101"
         }
       ]
     },
@@ -170,8 +218,8 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "test-compile": "tsc -p ./",
     "pretest": "rimraf ./out/test && npm run test-compile && npm run lint",
-    "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
+    "lint": "eslint src --ext ts",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
     "release-version": "standard-version",
     "build": "vsce package",
@@ -189,6 +237,7 @@
     "crypto-js": "^4.1.1",
     "hosted-git-info": "^5.0.0",
     "is-builtin-module": "^3.2.0",
+    "lodash": "^4.17.21",
     "lru-cache": "^7.13.2",
     "pacote": "^13.6.1",
     "validate-npm-package-name": "^4.0.0"
@@ -202,6 +251,7 @@
     "@types/crypto-js": "^4.1.1",
     "@types/glob": "^7.2.0",
     "@types/hosted-git-info": "^3.0.2",
+    "@types/lodash": "^4.14.191",
     "@types/mocha": "^9.1.1",
     "@types/node": "16.11.47",
     "@types/pacote": "^11.1.5",

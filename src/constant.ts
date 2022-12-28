@@ -1,3 +1,4 @@
+export const EXTENSION_NAME = 'node_modules'
 export const NODE_MODULES = 'node_modules'
 export const PACKAGE_JSON = 'package.json'
 export const PACKAGE_LOCK_JSON = 'package-lock.json'

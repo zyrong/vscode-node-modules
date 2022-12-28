@@ -3,10 +3,10 @@ import { basename, join } from 'path'
 import validate = require('validate-npm-package-name')
 import { Uri, window, workspace } from 'vscode'
 
+import { NODE_MODULES, PACKAGE_JSON } from './constant'
 import { logger } from './extension'
-import { NODE_MODULES, PACKAGE_JSON } from './types'
 import t from './utils/localize'
-import { getFileInProjectRootDir } from './vs-utils'
+import { getWorkspaceFolderPathByPath } from './vs-utils'
 import showPickWorkspaceFolder from './vs-utils/showPickWorkspaceFolder'
 
 export default async function (uri: Uri) {
@@ -104,8 +104,8 @@ async function searchNodeModules(node_modulesPath: string) {
     })
     .flat()
 
-  const projectRootDir = getFileInProjectRootDir(node_modulesPath)
-  const projectName = basename(projectRootDir!)
+  const wsFolderPath = getWorkspaceFolderPathByPath(node_modulesPath)
+  const projectName = basename(wsFolderPath!)
   // 用户选择结果
   const pickResult = await window.showQuickPick(fullPkgNameList, {
     placeHolder: join(projectName, NODE_MODULES),
