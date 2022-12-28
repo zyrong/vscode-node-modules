@@ -10,7 +10,7 @@
     "goto",
     "jump"
   ],
-  "version": "1.5.3",
+  "version": "1.6.0",
   "engines": {
     "vscode": "^1.67.0"
   },
@@ -110,12 +110,12 @@
           "group": "4_search@2"
         },
         {
-          "when": "resourcePath =~ \/.*\/node_modules\/.*\/",
+          "when": "resourcePath =~ /.*/node_modules/.*/",
           "command": "extension.copy.realPath",
           "group": "6_copypath@100"
         },
         {
-          "when": "resourcePath =~ \/.*\/node_modules\/.*\/",
+          "when": "resourcePath =~ /.*/node_modules/.*/",
           "command": "extension.copy.relativeRealPath",
           "group": "6_copypath@101"
         }

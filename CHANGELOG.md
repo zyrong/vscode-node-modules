@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/zyrong/vscode-node-modules/compare/v1.5.3...v1.6.0) (2022-12-28)
+
+
+### Features
+
+* new feature ([10c9610](https://github.com/zyrong/vscode-node-modules/commit/10c961006848c4f36c974c44c4f3abc43716366a))
+* support hover packagejson pkgname definition preview ([10bf2c5](https://github.com/zyrong/vscode-node-modules/commit/10bf2c59cd89039d3ab69b3d039d34e0f9035e50))
+
 ### [1.5.3](https://github.com/zyrong/vscode-node-modules/compare/v1.5.2...v1.5.3) (2022-09-20)
 
 
