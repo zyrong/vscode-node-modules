@@ -1,9 +1,8 @@
 README.md Language: [中文](https://github.com/zyrong/vscode-node-modules/blob/master/README.md) | [English](https://github.com/zyrong/vscode-node-modules/blob/master/README.en.md)
 <br/><br/>
 
-# node-modules ![](https://vsmarketplacebadge.apphb.com/version/zyrong.node-modules.svg) ![](https://vsmarketplacebadge.apphb.com/installs/zyrong.node-modules.svg)
-
-> Quickly go to the directory of the corresponding package under the node_modules
+# node-modules
+<!-- ![](https://vsmarketplacebadge.apphb.com/version/zyrong.node-modules.svg) ![](https://vsmarketplacebadge.apphb.com/installs/zyrong.node-modules.svg) -->
 
 <br/>
 
