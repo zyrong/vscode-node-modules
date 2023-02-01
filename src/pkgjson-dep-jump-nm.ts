@@ -26,7 +26,9 @@ async function provideDefinition(
 ): Promise<Definition | DefinitionLink[] | LocationLink[] | null | undefined> {
   try {
     const pkgNodeInfo = await getPackageNodeInfoByDocAndPos(document, position)
-    if (!pkgNodeInfo?.packageInstalledPath) {
+    if (!pkgNodeInfo) {
+      return
+    } else if (!pkgNodeInfo?.packageInstalledPath) {
       window.showInformationMessage(t('tip.notFoundPackage'))
       return
     }
