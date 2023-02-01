@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.1](https://github.com/zyrong/vscode-node-modules/compare/v1.6.0...v1.6.1) (2023-02-01)
+
+
+### Bug Fixes
+
+* prevent the hover package version from triggering an not installed prompt ([d89fa3a](https://github.com/zyrong/vscode-node-modules/commit/d89fa3aa890a841c06f9618fd75360615e86ae5f)), closes [#22](https://github.com/zyrong/vscode-node-modules/issues/22)
+
 ## [1.6.0](https://github.com/zyrong/vscode-node-modules/compare/v1.5.3...v1.6.0) (2022-12-28)
 
 
