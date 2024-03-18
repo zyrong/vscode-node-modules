@@ -116,7 +116,19 @@ export class HoverTip implements HoverProvider {
       return
     }
 
-    const packageName = fullPkgPath
+    let packageName = fullPkgPath
+    const slashIndex = packageName.indexOf('/')
+    if (slashIndex !== -1) {
+      const isScopePkg = packageName.startsWith('@')
+      if (isScopePkg) {
+        const secondSlashIndex = fullPkgPath.indexOf('/', slashIndex + 1)
+        if (secondSlashIndex !== -1) {
+          packageName = packageName.slice(0, secondSlashIndex)
+        }
+      } else {
+        packageName = packageName.slice(0, slashIndex)
+      }
+    }
 
     if (!validate(packageName).validForOldPackages) {
       return
